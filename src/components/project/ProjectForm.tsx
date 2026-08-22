@@ -30,7 +30,7 @@ export function ProjectForm() {
       setServerError(result.error);
       return;
     }
-    router.push(`/projects/${result.id}`);
+    router.push(`/projects/${result.slug}`);
   }
 
   return (

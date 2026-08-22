@@ -59,7 +59,7 @@ export function ProjectCard({ project: initialProject, totals }: ProjectWithTota
   return (
     <div className="relative">
       <Link
-        href={`/projects/${project.id}`}
+        href={`/projects/${project.slug ?? project.id}`}
         className="block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:ring-brand-200"
       >
         <div className="flex items-start justify-between gap-2">

@@ -2,10 +2,30 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { projectSchema, type ProjectFormValues } from "@/lib/schemas";
+import { slugify } from "@/lib/slug";
+
+async function generateUniqueSlug(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  name: string
+): Promise<string> {
+  const base = slugify(name) || "proekt";
+
+  const { data: existing } = await supabase
+    .from("projects")
+    .select("slug")
+    .like("slug", `${base}%`);
+
+  const taken = new Set((existing ?? []).map((r) => r.slug));
+  if (!taken.has(base)) return base;
+
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
 
 export async function createProject(
   values: ProjectFormValues
-): Promise<{ id: string } | { error: string }> {
+): Promise<{ id: string; slug: string } | { error: string }> {
   const parsed = projectSchema.safeParse(values);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Неверные данные" };
@@ -21,11 +41,14 @@ export async function createProject(
     return { error: "Не авторизовано" };
   }
 
+  const slug = await generateUniqueSlug(supabase, name);
+
   const { data: project, error } = await supabase
     .from("projects")
     .insert({
       user_id: user.id,
       name,
+      slug,
       project_type,
       total_amount,
       deadline: deadline || null,
@@ -51,5 +74,5 @@ export async function createProject(
     return { error: paymentError.message };
   }
 
-  return { id: project.id };
+  return { id: project.id, slug: project.slug };
 }

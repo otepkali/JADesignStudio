@@ -6,6 +6,7 @@ export interface Project {
   id: string;
   user_id: string | null;
   name: string;
+  slug: string | null;
   project_type: ProjectType;
   total_amount: number;
   deadline: string | null;

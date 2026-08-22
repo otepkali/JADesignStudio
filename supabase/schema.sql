@@ -7,6 +7,7 @@ create table if not exists projects (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null default auth.uid(),
   name text not null,
+  slug text,
   project_type text not null default 'turnkey' check (project_type in ('turnkey', 'design')),
   total_amount numeric not null,
   deadline date,
@@ -14,6 +15,8 @@ create table if not exists projects (
   status text not null default 'in_progress', -- in_progress | completed
   created_at timestamptz default now()
 );
+
+create unique index if not exists projects_slug_unique on projects (slug);
 
 create table if not exists payments (
   id uuid primary key default gen_random_uuid(),

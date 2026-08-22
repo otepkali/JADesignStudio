@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { calculateProjectTotals, type ProjectTotals } from "@/lib/calculations";
+import { UUID_RE } from "@/lib/slug";
 import type {
   Project,
   ExpenseWithCategory,
@@ -96,11 +97,15 @@ export interface ProjectDetail {
   totals: ProjectTotals;
 }
 
-export async function getProjectDetail(id: string): Promise<ProjectDetail | null> {
+export async function getProjectDetail(idOrSlug: string): Promise<ProjectDetail | null> {
   const supabase = await createClient();
 
-  const { data: project } = await supabase.from("projects").select("*").eq("id", id).single();
+  const { data: project } = UUID_RE.test(idOrSlug)
+    ? await supabase.from("projects").select("*").eq("id", idOrSlug).maybeSingle()
+    : await supabase.from("projects").select("*").eq("slug", idOrSlug).maybeSingle();
   if (!project) return null;
+
+  const id = project.id;
 
   const [
     { data: payments },
