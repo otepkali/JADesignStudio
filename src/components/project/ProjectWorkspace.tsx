@@ -10,32 +10,51 @@ import { PaymentModal } from "@/components/project/PaymentModal";
 import { EditProjectModal } from "@/components/project/EditProjectModal";
 import { CategoryPieChart } from "@/components/project/CategoryPieChart";
 import { WeeklyBarChart } from "@/components/project/WeeklyBarChart";
+import { ProjectBudget } from "@/components/project/ProjectBudget";
 import {
   addExpense,
   addPayment,
   deleteExpense,
   resyncExpense,
+  saveBudgetLines,
   updateExpense,
   updateProject,
 } from "@/app/(app)/projects/[id]/actions";
-import type { Project, ExpenseCategory, ExpenseWithCategory, Payment } from "@/types/database";
-import type { ExpenseFormValues, PaymentFormValues, ProjectUpdateFormValues } from "@/lib/schemas";
+import type {
+  Project,
+  ExpenseCategory,
+  ExpenseSubcategory,
+  ExpenseWithCategory,
+  Payment,
+  ProjectBudgetLine,
+} from "@/types/database";
+import type {
+  BudgetLinesFormValues,
+  ExpenseFormValues,
+  PaymentFormValues,
+  ProjectUpdateFormValues,
+} from "@/lib/schemas";
 
 export function ProjectWorkspace({
   project: initialProject,
   initialPayments,
   initialExpenses,
   initialCategories,
+  initialSubcategories,
+  initialBudgetLines,
 }: {
   project: Project;
   initialPayments: Payment[];
   initialExpenses: ExpenseWithCategory[];
   initialCategories: ExpenseCategory[];
+  initialSubcategories: ExpenseSubcategory[];
+  initialBudgetLines: ProjectBudgetLine[];
 }) {
   const [project, setProject] = useState(initialProject);
   const [payments, setPayments] = useState(initialPayments);
   const [expenses, setExpenses] = useState(initialExpenses);
   const [categories, setCategories] = useState(initialCategories);
+  const [subcategories] = useState(initialSubcategories);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [editProjectModalOpen, setEditProjectModalOpen] = useState(false);
   const [syncNotice, setSyncNotice] = useState<string | null>(null);
@@ -109,6 +128,14 @@ export function ProjectWorkspace({
     return {};
   }
 
+  async function handleSaveBudget(values: BudgetLinesFormValues) {
+    const result = await saveBudgetLines(project.id, values);
+    if ("error" in result && result.error) {
+      return { error: result.error };
+    }
+    return {};
+  }
+
   async function handleAddPayment(values: PaymentFormValues) {
     const result = await addPayment(project.id, values);
     if ("error" in result && result.error) {
@@ -136,13 +163,13 @@ export function ProjectWorkspace({
           <div className="flex shrink-0 gap-2">
             <button
               onClick={() => setEditProjectModalOpen(true)}
-              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-xl border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 transition hover:border-brand-300 hover:bg-brand-50"
             >
               Изменить
             </button>
             <button
               onClick={() => setPaymentModalOpen(true)}
-              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-xl border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 transition hover:border-brand-300 hover:bg-brand-50"
             >
               + Добавить оплату
             </button>
@@ -185,8 +212,22 @@ export function ProjectWorkspace({
         <h2 className="mb-3 text-base font-semibold text-neutral-900">Добавить расход</h2>
         <ExpenseForm
           categories={categories}
+          subcategories={subcategories}
           onCategoriesChange={setCategories}
           onSubmit={handleAddExpense}
+        />
+      </div>
+
+      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
+        <h2 className="mb-3 text-base font-semibold text-neutral-900">
+          Плановая себестоимость и маржа
+        </h2>
+        <ProjectBudget
+          project={project}
+          categories={categories}
+          initialBudgetLines={initialBudgetLines}
+          expenses={expenses}
+          onSave={handleSaveBudget}
         />
       </div>
 
@@ -206,6 +247,7 @@ export function ProjectWorkspace({
         <ExpensesTable
           expenses={expenses}
           categories={categories}
+          subcategories={subcategories}
           onCategoriesChange={setCategories}
           onUpdate={handleUpdateExpense}
           onDelete={handleDeleteExpense}

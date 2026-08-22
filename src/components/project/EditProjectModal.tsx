@@ -65,7 +65,7 @@ export function EditProjectModal({
             </label>
             <input
               {...register("name")}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             />
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
           </div>
@@ -79,7 +79,7 @@ export function EditProjectModal({
               inputMode="numeric"
               step="1"
               {...register("total_amount")}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             />
             {errors.total_amount && (
               <p className="mt-1 text-sm text-red-600">{errors.total_amount.message}</p>
@@ -92,7 +92,7 @@ export function EditProjectModal({
               <input
                 type="date"
                 {...register("deadline")}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+                className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
               />
             </div>
             <div>
@@ -103,7 +103,7 @@ export function EditProjectModal({
                 type="number"
                 inputMode="numeric"
                 {...register("prepayment_percent")}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+                className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
               />
             </div>
           </div>
@@ -112,7 +112,7 @@ export function EditProjectModal({
             <label className="mb-1 block text-sm font-medium text-neutral-700">Статус</label>
             <select
               {...register("status")}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             >
               <option value="in_progress">В работе</option>
               <option value="completed">Завершён</option>
@@ -124,7 +124,7 @@ export function EditProjectModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-neutral-900 px-4 py-3 text-base font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
+            className="w-full rounded-xl bg-brand-700 px-4 py-3 text-base font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
           >
             {isSubmitting ? "Сохранение..." : "Сохранить изменения"}
           </button>

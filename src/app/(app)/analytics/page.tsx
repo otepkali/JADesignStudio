@@ -29,7 +29,7 @@ export default async function AnalyticsPage({
           <select
             name="projectId"
             defaultValue={params.projectId ?? ""}
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="rounded-xl border border-neutral-300 px-3 py-2 text-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           >
             <option value="">Все проекты</option>
             {projects.map((p) => (
@@ -45,7 +45,7 @@ export default async function AnalyticsPage({
             type="date"
             name="from"
             defaultValue={params.from ?? ""}
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="rounded-xl border border-neutral-300 px-3 py-2 text-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
         </div>
         <div>
@@ -54,12 +54,12 @@ export default async function AnalyticsPage({
             type="date"
             name="to"
             defaultValue={params.to ?? ""}
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+            className="rounded-xl border border-neutral-300 px-3 py-2 text-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
         </div>
         <button
           type="submit"
-          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+          className="rounded-xl bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
         >
           Применить
         </button>

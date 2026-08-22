@@ -1,7 +1,14 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { calculateProjectTotals, type ProjectTotals } from "@/lib/calculations";
-import type { Project, ExpenseWithCategory, Payment, ExpenseCategory } from "@/types/database";
+import type {
+  Project,
+  ExpenseWithCategory,
+  Payment,
+  ExpenseCategory,
+  ExpenseSubcategory,
+  ProjectBudgetLine,
+} from "@/types/database";
 
 export interface ProjectWithTotals {
   project: Project;
@@ -84,6 +91,8 @@ export interface ProjectDetail {
   payments: Payment[];
   expenses: ExpenseWithCategory[];
   categories: ExpenseCategory[];
+  subcategories: ExpenseSubcategory[];
+  budgetLines: ProjectBudgetLine[];
   totals: ProjectTotals;
 }
 
@@ -93,7 +102,13 @@ export async function getProjectDetail(id: string): Promise<ProjectDetail | null
   const { data: project } = await supabase.from("projects").select("*").eq("id", id).single();
   if (!project) return null;
 
-  const [{ data: payments }, { data: expenses }, { data: categories }] = await Promise.all([
+  const [
+    { data: payments },
+    { data: expenses },
+    { data: categories },
+    { data: subcategories },
+    { data: budgetLines },
+  ] = await Promise.all([
     supabase
       .from("payments")
       .select("*")
@@ -101,10 +116,12 @@ export async function getProjectDetail(id: string): Promise<ProjectDetail | null
       .order("paid_at", { ascending: false }),
     supabase
       .from("expenses")
-      .select("*, expense_categories(*)")
+      .select("*, expense_categories(*), expense_subcategories(*)")
       .eq("project_id", id)
       .order("expense_date", { ascending: false }),
     supabase.from("expense_categories").select("*").order("name"),
+    supabase.from("expense_subcategories").select("*").order("name"),
+    supabase.from("project_budget_lines").select("*").eq("project_id", id),
   ]);
 
   return {
@@ -112,6 +129,8 @@ export async function getProjectDetail(id: string): Promise<ProjectDetail | null
     payments: payments ?? [],
     expenses: (expenses ?? []) as unknown as ExpenseWithCategory[],
     categories: categories ?? [],
+    subcategories: subcategories ?? [],
+    budgetLines: budgetLines ?? [],
     totals: calculateProjectTotals(payments ?? [], expenses ?? []),
   };
 }

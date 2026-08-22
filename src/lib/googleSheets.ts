@@ -4,6 +4,7 @@ export interface ExpenseSheetRow {
   date: string;
   projectName: string;
   categoryName: string;
+  subcategoryName: string;
   materialName: string;
   quantity: number | null;
   unit: string | null;
@@ -35,7 +36,7 @@ export async function appendExpenseRow(row: ExpenseSheetRow) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: sheetId,
-    range: "A:I",
+    range: "A:J",
     valueInputOption: "USER_ENTERED",
     insertDataOption: "INSERT_ROWS",
     requestBody: {
@@ -44,6 +45,7 @@ export async function appendExpenseRow(row: ExpenseSheetRow) {
           row.date,
           row.projectName,
           row.categoryName,
+          row.subcategoryName,
           row.materialName,
           row.quantity ?? "",
           row.unit ?? "",

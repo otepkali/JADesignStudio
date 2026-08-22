@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { expenseSchema, type ExpenseFormInput, type ExpenseFormValues } from "@/lib/schemas";
 import { addCategory } from "@/app/(app)/projects/[id]/actions";
-import type { ExpenseCategory } from "@/types/database";
+import type { ExpenseCategory, ExpenseSubcategory } from "@/types/database";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -13,6 +13,7 @@ function todayISO() {
 
 export function ExpenseForm({
   categories,
+  subcategories,
   onCategoriesChange,
   onSubmit: onSubmitValues,
   defaultValues,
@@ -20,6 +21,7 @@ export function ExpenseForm({
   onCancel,
 }: {
   categories: ExpenseCategory[];
+  subcategories: ExpenseSubcategory[];
   onCategoriesChange: (categories: ExpenseCategory[]) => void;
   onSubmit: (values: ExpenseFormValues) => Promise<{ error?: string }>;
   defaultValues?: Partial<ExpenseFormInput>;
@@ -48,6 +50,8 @@ export function ExpenseForm({
   });
 
   const entryMode = watch("entry_mode");
+  const categoryId = watch("category_id");
+  const subcategoryOptions = subcategories.filter((s) => s.category_id === categoryId);
 
   async function handleAddCategory() {
     const result = await addCategory(newCategoryName);
@@ -77,6 +81,7 @@ export function ExpenseForm({
       entry_mode: values.entry_mode,
       expense_date: todayISO(),
       category_id: values.category_id,
+      subcategory_id: values.subcategory_id ?? "",
       material_name: "",
       quantity: undefined,
       unit: "",
@@ -96,8 +101,8 @@ export function ExpenseForm({
           {!addingCategory ? (
             <div className="flex gap-2">
               <select
-                {...register("category_id")}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+                {...register("category_id", { onChange: () => setValue("subcategory_id", "") })}
+                className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -108,7 +113,7 @@ export function ExpenseForm({
               <button
                 type="button"
                 onClick={() => setAddingCategory(true)}
-                className="shrink-0 rounded-lg border border-neutral-300 px-3 text-sm text-neutral-600 hover:bg-neutral-50"
+                className="shrink-0 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-600 transition hover:border-brand-300 hover:bg-brand-50"
               >
                 + своя
               </button>
@@ -120,19 +125,19 @@ export function ExpenseForm({
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="Название категории"
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+                className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
               />
               <button
                 type="button"
                 onClick={handleAddCategory}
-                className="shrink-0 rounded-lg bg-neutral-900 px-3 text-sm text-white"
+                className="shrink-0 rounded-xl bg-brand-700 px-3 text-sm text-white transition hover:bg-brand-800"
               >
                 OK
               </button>
               <button
                 type="button"
                 onClick={() => setAddingCategory(false)}
-                className="shrink-0 rounded-lg border border-neutral-300 px-3 text-sm text-neutral-600"
+                className="shrink-0 rounded-xl border border-neutral-300 px-3 text-sm text-neutral-600 transition hover:bg-neutral-50"
               >
                 ×
               </button>
@@ -148,10 +153,27 @@ export function ExpenseForm({
           <input
             type="date"
             {...register("expense_date")}
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+            className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
         </div>
       </div>
+
+      {subcategoryOptions.length > 0 && (
+        <div>
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Подкатегория</label>
+          <select
+            {...register("subcategory_id")}
+            className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+          >
+            <option value="">— не указана —</option>
+            {subcategoryOptions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div>
         <label className="mb-1 block text-sm font-medium text-neutral-700">
@@ -160,7 +182,7 @@ export function ExpenseForm({
         <input
           {...register("material_name")}
           placeholder="Например: Ламинат"
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+          className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
         />
         {errors.material_name && (
           <p className="mt-1 text-sm text-red-600">{errors.material_name.message}</p>
@@ -173,7 +195,7 @@ export function ExpenseForm({
           type="button"
           onClick={() => setValue("entry_mode", "total")}
           className={`rounded-full px-3 py-1 ${
-            entryMode === "total" ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-600"
+            entryMode === "total" ? "bg-brand-700 text-white" : "bg-neutral-100 text-neutral-600"
           }`}
         >
           Сумма целиком
@@ -183,7 +205,7 @@ export function ExpenseForm({
           onClick={() => setValue("entry_mode", "unit_price")}
           className={`rounded-full px-3 py-1 ${
             entryMode === "unit_price"
-              ? "bg-neutral-900 text-white"
+              ? "bg-brand-700 text-white"
               : "bg-neutral-100 text-neutral-600"
           }`}
         >
@@ -199,7 +221,7 @@ export function ExpenseForm({
             inputMode="decimal"
             step="any"
             {...register("total_price")}
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+            className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
         </div>
       ) : (
@@ -211,7 +233,7 @@ export function ExpenseForm({
               inputMode="decimal"
               step="any"
               {...register("quantity")}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             />
           </div>
           <div>
@@ -219,7 +241,7 @@ export function ExpenseForm({
             <input
               {...register("unit")}
               placeholder="шт, м²"
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             />
           </div>
           <div>
@@ -231,7 +253,7 @@ export function ExpenseForm({
               inputMode="decimal"
               step="any"
               {...register("unit_price")}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             />
           </div>
         </div>
@@ -244,7 +266,7 @@ export function ExpenseForm({
         <summary className="cursor-pointer text-neutral-500">Примечание (необязательно)</summary>
         <input
           {...register("note")}
-          className="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+          className="mt-2 w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
         />
       </details>
 
@@ -254,7 +276,7 @@ export function ExpenseForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-lg bg-neutral-900 px-4 py-3 text-base font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
+          className="w-full rounded-xl bg-brand-700 px-4 py-3 text-base font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
         >
           {isSubmitting ? "Сохранение..." : submitLabel}
         </button>
@@ -262,7 +284,7 @@ export function ExpenseForm({
           <button
             type="button"
             onClick={onCancel}
-            className="shrink-0 rounded-lg border border-neutral-300 px-4 py-3 text-base text-neutral-600 hover:bg-neutral-50"
+            className="shrink-0 rounded-xl border border-neutral-300 px-4 py-3 text-base text-neutral-600 transition hover:border-brand-300 hover:bg-brand-50"
           >
             Отмена
           </button>

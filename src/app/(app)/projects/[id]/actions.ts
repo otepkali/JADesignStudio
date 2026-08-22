@@ -4,14 +4,22 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { appendExpenseRow } from "@/lib/googleSheets";
 import {
+  budgetLinesSchema,
   expenseSchema,
   paymentSchema,
   projectUpdateSchema,
+  type BudgetLinesFormValues,
   type ExpenseFormValues,
   type PaymentFormValues,
   type ProjectUpdateFormValues,
 } from "@/lib/schemas";
-import type { ExpenseCategory, ExpenseWithCategory, Payment, Project } from "@/types/database";
+import type {
+  ExpenseCategory,
+  ExpenseWithCategory,
+  Payment,
+  Project,
+  ProjectBudgetLine,
+} from "@/types/database";
 
 export async function updateProject(
   projectId: string,
@@ -87,7 +95,7 @@ function resolveTotalPrice(values: ExpenseFormValues): number {
 async function syncExpenseToSheets(supabase: Awaited<ReturnType<typeof createClient>>, expenseId: string) {
   const { data: expense } = await supabase
     .from("expenses")
-    .select("*, projects(name), expense_categories(name)")
+    .select("*, projects(name), expense_categories(name), expense_subcategories(name)")
     .eq("id", expenseId)
     .single();
 
@@ -98,6 +106,8 @@ async function syncExpenseToSheets(supabase: Awaited<ReturnType<typeof createCli
       date: expense.expense_date,
       projectName: (expense.projects as unknown as { name: string } | null)?.name ?? "",
       categoryName: (expense.expense_categories as unknown as { name: string } | null)?.name ?? "",
+      subcategoryName:
+        (expense.expense_subcategories as unknown as { name: string } | null)?.name ?? "",
       materialName: expense.material_name,
       quantity: expense.quantity,
       unit: expense.unit,
@@ -130,6 +140,7 @@ export async function addExpense(
     .insert({
       project_id: projectId,
       category_id: v.category_id,
+      subcategory_id: v.subcategory_id || null,
       material_name: v.material_name,
       quantity: v.quantity ?? null,
       unit: v.unit || null,
@@ -138,7 +149,7 @@ export async function addExpense(
       expense_date: v.expense_date,
       note: v.note || null,
     })
-    .select("*, expense_categories(*)")
+    .select("*, expense_categories(*), expense_subcategories(*)")
     .single();
 
   if (error || !inserted) {
@@ -174,6 +185,7 @@ export async function updateExpense(
     .from("expenses")
     .update({
       category_id: v.category_id,
+      subcategory_id: v.subcategory_id || null,
       material_name: v.material_name,
       quantity: v.quantity ?? null,
       unit: v.unit || null,
@@ -184,7 +196,7 @@ export async function updateExpense(
       synced_to_sheets: false,
     })
     .eq("id", expenseId)
-    .select("*, expense_categories(*)")
+    .select("*, expense_categories(*), expense_subcategories(*)")
     .single();
 
   if (error || !data) {
@@ -253,4 +265,33 @@ export async function addCategory(
   }
 
   return { category: data };
+}
+
+export async function saveBudgetLines(
+  projectId: string,
+  values: BudgetLinesFormValues
+): Promise<{ error: string } | { budgetLines: ProjectBudgetLine[] }> {
+  const parsed = budgetLinesSchema.safeParse(values);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Неверные данные" };
+  }
+
+  const supabase = await createClient();
+  const rows = parsed.data.lines.map((line) => ({
+    project_id: projectId,
+    category_id: line.category_id,
+    planned_amount: line.planned_amount,
+  }));
+
+  const { data, error } = await supabase
+    .from("project_budget_lines")
+    .upsert(rows, { onConflict: "project_id,category_id" })
+    .select();
+
+  if (error || !data) {
+    return { error: error?.message ?? "Не удалось сохранить плановый бюджет" };
+  }
+
+  revalidatePath(`/projects/${projectId}`);
+  return { budgetLines: data };
 }

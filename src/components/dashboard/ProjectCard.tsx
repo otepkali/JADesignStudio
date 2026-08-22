@@ -10,7 +10,7 @@ export function ProjectCard({ project, totals }: ProjectWithTotals) {
   return (
     <Link
       href={`/projects/${project.id}`}
-      className="block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200 transition hover:ring-neutral-300"
+      className="block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200 transition hover:shadow-md hover:ring-brand-200"
     >
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -31,7 +31,7 @@ export function ProjectCard({ project, totals }: ProjectWithTotals) {
       <div className="mt-4">
         <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
           <div
-            className={`h-full rounded-full ${isOverBudget ? "bg-red-500" : "bg-neutral-900"}`}
+            className={`h-full rounded-full ${isOverBudget ? "bg-red-500" : "bg-brand-700"}`}
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #fafafa;
   --foreground: #171717;
 }
 
@@ -10,10 +10,30 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-playfair);
+
+  /* Brand palette, anchored on the logo's wine/burgundy (#530E20). */
+  --color-brand-50: #fcf3f5;
+  --color-brand-100: #f7e3e9;
+  --color-brand-200: #eec4cf;
+  --color-brand-300: #e892a9;
+  --color-brand-400: #db577a;
+  --color-brand-500: #c22952;
+  --color-brand-600: #8b1d3b;
+  --color-brand-700: #530e20;
+  --color-brand-800: #3d0a18;
+  --color-brand-900: #2c0711;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), Georgia, serif;
+  letter-spacing: -0.01em;
 }

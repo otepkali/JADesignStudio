@@ -34,7 +34,7 @@ export default async function DashboardPage() {
         <h1 className="text-lg font-semibold text-neutral-900">Объекты</h1>
         <Link
           href="/projects/new"
-          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+          className="rounded-xl bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
         >
           + Создать проект
         </Link>

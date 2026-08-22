@@ -16,6 +16,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
       initialPayments={detail.payments}
       initialExpenses={detail.expenses}
       initialCategories={detail.categories}
+      initialSubcategories={detail.subcategories}
+      initialBudgetLines={detail.budgetLines}
     />
   );
 }

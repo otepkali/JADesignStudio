@@ -3,12 +3,13 @@
 import { useMemo, useState } from "react";
 import { formatDate, formatTenge } from "@/lib/format";
 import { ExpenseForm } from "@/components/project/ExpenseForm";
-import type { ExpenseCategory, ExpenseWithCategory } from "@/types/database";
+import type { ExpenseCategory, ExpenseSubcategory, ExpenseWithCategory } from "@/types/database";
 import type { ExpenseFormValues } from "@/lib/schemas";
 
 export function ExpensesTable({
   expenses,
   categories,
+  subcategories,
   onCategoriesChange,
   onUpdate,
   onDelete,
@@ -16,6 +17,7 @@ export function ExpensesTable({
 }: {
   expenses: ExpenseWithCategory[];
   categories: ExpenseCategory[];
+  subcategories: ExpenseSubcategory[];
   onCategoriesChange: (categories: ExpenseCategory[]) => void;
   onUpdate: (expenseId: string, values: ExpenseFormValues) => Promise<{ error?: string }>;
   onDelete: (expenseId: string) => Promise<void>;
@@ -41,7 +43,7 @@ export function ExpensesTable({
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="rounded-lg border border-neutral-300 px-2 py-1.5 text-sm focus:border-neutral-900 focus:outline-none"
+          className="rounded-xl border border-neutral-300 px-2 py-1.5 text-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
         >
           <option value="all">Все статьи</option>
           {categories.map((c) => (
@@ -61,11 +63,13 @@ export function ExpensesTable({
               <div key={expense.id} className="rounded-xl border border-neutral-300 bg-neutral-50 p-4">
                 <ExpenseForm
                   categories={categories}
+                  subcategories={subcategories}
                   onCategoriesChange={onCategoriesChange}
                   submitLabel="Сохранить"
                   onCancel={() => setEditingId(null)}
                   defaultValues={{
                     category_id: expense.category_id ?? categories[0]?.id ?? "",
+                    subcategory_id: expense.subcategory_id ?? "",
                     material_name: expense.material_name,
                     quantity: expense.quantity ?? undefined,
                     unit: expense.unit ?? "",
@@ -86,7 +90,10 @@ export function ExpensesTable({
                 <div className="min-w-0">
                   <p className="truncate font-medium text-neutral-900">{expense.material_name}</p>
                   <p className="text-xs text-neutral-500">
-                    {expense.expense_categories?.name ?? "Без категории"} · {formatDate(expense.expense_date)}
+                    {expense.expense_categories?.name ?? "Без категории"}
+                    {expense.expense_subcategories ? ` / ${expense.expense_subcategories.name}` : ""}
+                    {" · "}
+                    {formatDate(expense.expense_date)}
                     {expense.quantity ? ` · ${expense.quantity} ${expense.unit ?? ""}` : ""}
                   </p>
                   {expense.note && <p className="mt-1 text-xs text-neutral-400">{expense.note}</p>}
@@ -106,7 +113,7 @@ export function ExpensesTable({
                   <div className="flex gap-2 text-xs">
                     <button
                       onClick={() => setEditingId(expense.id)}
-                      className="text-neutral-500 hover:text-neutral-900"
+                      className="text-neutral-500 hover:text-brand-700"
                     >
                       Изменить
                     </button>

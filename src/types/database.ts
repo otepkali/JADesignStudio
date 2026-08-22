@@ -3,7 +3,7 @@ export type PaymentType = "prepayment" | "additional" | "final";
 
 export interface Project {
   id: string;
-  user_id: string;
+  user_id: string | null;
   name: string;
   total_amount: number;
   deadline: string | null;
@@ -24,7 +24,13 @@ export interface Payment {
 
 export interface ExpenseCategory {
   id: string;
-  user_id: string;
+  user_id: string | null;
+  name: string;
+}
+
+export interface ExpenseSubcategory {
+  id: string;
+  category_id: string;
   name: string;
 }
 
@@ -32,6 +38,7 @@ export interface Expense {
   id: string;
   project_id: string;
   category_id: string | null;
+  subcategory_id: string | null;
   material_name: string;
   quantity: number | null;
   unit: string | null;
@@ -45,42 +52,17 @@ export interface Expense {
 
 export interface ExpenseWithCategory extends Expense {
   expense_categories: ExpenseCategory | null;
+  expense_subcategories: ExpenseSubcategory | null;
 }
 
-export interface Database {
-  public: {
-    Tables: {
-      projects: {
-        Row: Project;
-        Insert: Partial<Project> & {
-          name: string;
-          total_amount: number;
-        };
-        Update: Partial<Project>;
-      };
-      payments: {
-        Row: Payment;
-        Insert: Partial<Payment> & {
-          project_id: string;
-          amount: number;
-          payment_type: PaymentType;
-        };
-        Update: Partial<Payment>;
-      };
-      expense_categories: {
-        Row: ExpenseCategory;
-        Insert: Partial<ExpenseCategory> & { name: string };
-        Update: Partial<ExpenseCategory>;
-      };
-      expenses: {
-        Row: Expense;
-        Insert: Partial<Expense> & {
-          project_id: string;
-          material_name: string;
-          total_price: number;
-        };
-        Update: Partial<Expense>;
-      };
-    };
-  };
+export interface ProjectBudgetLine {
+  id: string;
+  project_id: string;
+  category_id: string;
+  planned_amount: number;
+  created_at: string;
+}
+
+export interface ProjectBudgetLineWithCategory extends ProjectBudgetLine {
+  expense_categories: ExpenseCategory | null;
 }

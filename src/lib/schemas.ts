@@ -30,6 +30,7 @@ export type PaymentFormInput = z.input<typeof paymentSchema>;
 export const expenseSchema = z
   .object({
     category_id: z.string().min(1, "Выберите статью расходов"),
+    subcategory_id: z.string().optional().or(z.literal("")),
     material_name: z.string().min(1, "Укажите название материала"),
     quantity: z.coerce.number().optional().nullable(),
     unit: z.string().optional().or(z.literal("")),
@@ -52,3 +53,15 @@ export const expenseSchema = z
 
 export type ExpenseFormValues = z.output<typeof expenseSchema>;
 export type ExpenseFormInput = z.input<typeof expenseSchema>;
+
+export const budgetLinesSchema = z.object({
+  lines: z.array(
+    z.object({
+      category_id: z.string().min(1),
+      planned_amount: z.coerce.number().min(0),
+    })
+  ),
+});
+
+export type BudgetLinesFormValues = z.output<typeof budgetLinesSchema>;
+export type BudgetLinesFormInput = z.input<typeof budgetLinesSchema>;

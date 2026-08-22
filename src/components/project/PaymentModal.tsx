@@ -60,7 +60,7 @@ export function PaymentModal({
               step="any"
               autoFocus
               {...register("amount")}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             />
             {errors.amount && <p className="mt-1 text-sm text-red-600">{errors.amount.message}</p>}
           </div>
@@ -68,7 +68,7 @@ export function PaymentModal({
             <label className="mb-1 block text-sm font-medium text-neutral-700">Тип оплаты</label>
             <select
               {...register("payment_type")}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             >
               <option value="additional">Доплата</option>
               <option value="final">Финальный расчёт</option>
@@ -79,7 +79,7 @@ export function PaymentModal({
             <input
               type="date"
               {...register("paid_at")}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             />
           </div>
           <div>
@@ -88,14 +88,14 @@ export function PaymentModal({
             </label>
             <input
               {...register("note")}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-neutral-900 focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             />
           </div>
           {serverError && <p className="text-sm text-red-600">{serverError}</p>}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-neutral-900 px-4 py-3 text-base font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
+            className="w-full rounded-xl bg-brand-700 px-4 py-3 text-base font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
           >
             {isSubmitting ? "Сохранение..." : "Сохранить оплату"}
           </button>

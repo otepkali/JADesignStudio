@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
   let query = supabase
     .from("expenses")
-    .select("*, projects(name), expense_categories(name)")
+    .select("*, projects(name), expense_categories(name), expense_subcategories(name)")
     .eq("synced_to_sheets", false);
 
   if (projectId) {
@@ -40,6 +40,8 @@ export async function POST(request: Request) {
         projectName: (expense.projects as unknown as { name: string } | null)?.name ?? "",
         categoryName:
           (expense.expense_categories as unknown as { name: string } | null)?.name ?? "",
+        subcategoryName:
+          (expense.expense_subcategories as unknown as { name: string } | null)?.name ?? "",
         materialName: expense.material_name,
         quantity: expense.quantity,
         unit: expense.unit,
