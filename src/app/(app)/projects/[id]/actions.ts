@@ -55,6 +55,20 @@ export async function updateProject(
   return { project: data };
 }
 
+export async function deleteProject(
+  projectId: string
+): Promise<{ error: string } | { success: true }> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("projects").delete().eq("id", projectId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function addPayment(
   projectId: string,
   values: PaymentFormValues
