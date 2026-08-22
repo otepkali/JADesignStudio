@@ -52,7 +52,7 @@ export function ProjectCard({ project, totals }: ProjectWithTotals) {
         <div>
           <p className="text-xs text-neutral-500">Остаток</p>
           <p className={`text-2xl font-bold ${isOverBudget ? "text-red-600" : "text-neutral-900"}`}>
-            <AnimatedNumber value={totals.remaining} formatter={formatTenge} />
+            <AnimatedNumber value={totals.remaining} format="tenge" />
           </p>
         </div>
         {project.deadline && (

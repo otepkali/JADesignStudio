@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { formatTenge } from "@/lib/format";
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
@@ -13,13 +14,21 @@ function prefersReducedMotion(): boolean {
   );
 }
 
+// `format` is a plain string (not a function) so this component can be
+// rendered from a Server Component — passing a function prop across that
+// boundary throws ("Functions cannot be passed directly to Client Components").
+const FORMATTERS = {
+  integer: (n: number) => String(Math.round(n)),
+  tenge: formatTenge,
+} as const;
+
 export function AnimatedNumber({
   value,
-  formatter = (n) => String(Math.round(n)),
+  format = "integer",
   duration = 900,
 }: {
   value: number;
-  formatter?: (n: number) => string;
+  format?: keyof typeof FORMATTERS;
   duration?: number;
 }) {
   const [reduced] = useState(prefersReducedMotion);
@@ -46,5 +55,5 @@ export function AnimatedNumber({
     };
   }, [value, duration, reduced]);
 
-  return <>{formatter(display)}</>;
+  return <>{FORMATTERS[format](display)}</>;
 }

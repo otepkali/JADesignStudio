@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getProjectsWithTotals, getDashboardSummary } from "@/lib/data";
 import { ProjectCard } from "@/components/dashboard/ProjectCard";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
-import { formatTenge } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +27,7 @@ export default async function DashboardPage() {
         >
           <p className="text-xs text-neutral-500">Сумма активных объектов</p>
           <p className="mt-1 text-xl font-bold text-neutral-900">
-            <AnimatedNumber value={summary.activeTotalAmount} formatter={formatTenge} />
+            <AnimatedNumber value={summary.activeTotalAmount} format="tenge" />
           </p>
         </div>
         <div
@@ -37,7 +36,7 @@ export default async function DashboardPage() {
         >
           <p className="text-xs text-neutral-500">Расходы за этот месяц</p>
           <p className="mt-1 text-xl font-bold text-neutral-900">
-            <AnimatedNumber value={summary.currentMonthExpenses} formatter={formatTenge} />
+            <AnimatedNumber value={summary.currentMonthExpenses} format="tenge" />
           </p>
         </div>
       </div>
