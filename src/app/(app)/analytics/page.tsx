@@ -1,5 +1,5 @@
-import { getFilteredExpenses, getProjectsForFilter } from "@/lib/data";
-import { groupExpensesByCategory } from "@/lib/analytics";
+import { getExpenseCategories, getFilteredExpenses, getProjectsForFilter } from "@/lib/data";
+import { groupExpensesByCategory, groupExpensesBySubcategory } from "@/lib/analytics";
 import { CategoryPieChart } from "@/components/project/CategoryPieChart";
 import { formatTenge } from "@/lib/format";
 
@@ -8,16 +8,23 @@ export const dynamic = "force-dynamic";
 export default async function AnalyticsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ projectId?: string; from?: string; to?: string }>;
+  searchParams: Promise<{ projectId?: string; categoryId?: string; from?: string; to?: string }>;
 }) {
   const params = await searchParams;
-  const [expenses, projects] = await Promise.all([
+  const [expenses, projects, categories] = await Promise.all([
     getFilteredExpenses(params),
     getProjectsForFilter(),
+    getExpenseCategories(),
   ]);
 
-  const categoryData = groupExpensesByCategory(expenses);
-  const total = categoryData.reduce((sum, c) => sum + c.value, 0);
+  const selectedCategory = params.categoryId
+    ? categories.find((c) => c.id === params.categoryId) ?? null
+    : null;
+
+  const breakdownData = selectedCategory
+    ? groupExpensesBySubcategory(expenses)
+    : groupExpensesByCategory(expenses);
+  const total = breakdownData.reduce((sum, c) => sum + c.value, 0);
 
   return (
     <div className="space-y-6">
@@ -35,6 +42,21 @@ export default async function AnalyticsPage({
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-neutral-700">Категория</label>
+          <select
+            name="categoryId"
+            defaultValue={params.categoryId ?? ""}
+            className="rounded-xl border border-neutral-300 px-3 py-2 text-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+          >
+            <option value="">Все категории</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
               </option>
             ))}
           </select>
@@ -68,18 +90,20 @@ export default async function AnalyticsPage({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
           <h2 className="mb-1 text-base font-semibold text-neutral-900">
-            Распределение расходов
+            {selectedCategory ? `Подкатегории: ${selectedCategory.name}` : "Распределение расходов"}
           </h2>
-          <CategoryPieChart data={categoryData} />
+          <CategoryPieChart data={breakdownData} />
         </div>
 
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-          <h2 className="mb-3 text-base font-semibold text-neutral-900">Топ категорий</h2>
-          {categoryData.length === 0 ? (
+          <h2 className="mb-3 text-base font-semibold text-neutral-900">
+            {selectedCategory ? "Топ подкатегорий" : "Топ категорий"}
+          </h2>
+          {breakdownData.length === 0 ? (
             <p className="text-sm text-neutral-400">Нет данных за выбранный период</p>
           ) : (
             <ul className="space-y-2">
-              {categoryData
+              {breakdownData
                 .slice()
                 .sort((a, b) => b.value - a.value)
                 .map((c) => (

@@ -143,6 +143,7 @@ export async function getExpenseCategories(): Promise<ExpenseCategory[]> {
 
 export interface AnalyticsFilters {
   projectId?: string;
+  categoryId?: string;
   from?: string;
   to?: string;
 }
@@ -157,9 +158,10 @@ export async function getFilteredExpenses(
   filters: AnalyticsFilters
 ): Promise<ExpenseWithCategory[]> {
   const supabase = await createClient();
-  let query = supabase.from("expenses").select("*, expense_categories(*)");
+  let query = supabase.from("expenses").select("*, expense_categories(*), expense_subcategories(*)");
 
   if (filters.projectId) query = query.eq("project_id", filters.projectId);
+  if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
   if (filters.from) query = query.gte("expense_date", filters.from);
   if (filters.to) query = query.lte("expense_date", filters.to);
 

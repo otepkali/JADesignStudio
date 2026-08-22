@@ -7,11 +7,15 @@ export interface CategoryBreakdown {
 
 const MAX_SLICES = 8;
 
-export function groupExpensesByCategory(expenses: ExpenseWithCategory[]): CategoryBreakdown[] {
+function groupExpensesByName(
+  expenses: ExpenseWithCategory[],
+  getName: (expense: ExpenseWithCategory) => string,
+  otherLabel: string
+): CategoryBreakdown[] {
   const totals = new Map<string, number>();
 
   for (const expense of expenses) {
-    const name = expense.expense_categories?.name ?? "Без категории";
+    const name = getName(expense);
     totals.set(name, (totals.get(name) ?? 0) + Number(expense.total_price));
   }
 
@@ -23,7 +27,23 @@ export function groupExpensesByCategory(expenses: ExpenseWithCategory[]): Catego
 
   const head = sorted.slice(0, MAX_SLICES - 1);
   const tailSum = sorted.slice(MAX_SLICES - 1).reduce((sum, item) => sum + item.value, 0);
-  return [...head, { name: "Другое", value: tailSum }];
+  return [...head, { name: otherLabel, value: tailSum }];
+}
+
+export function groupExpensesByCategory(expenses: ExpenseWithCategory[]): CategoryBreakdown[] {
+  return groupExpensesByName(
+    expenses,
+    (expense) => expense.expense_categories?.name ?? "Без категории",
+    "Другое"
+  );
+}
+
+export function groupExpensesBySubcategory(expenses: ExpenseWithCategory[]): CategoryBreakdown[] {
+  return groupExpensesByName(
+    expenses,
+    (expense) => expense.expense_subcategories?.name ?? "Без подкатегории",
+    "Другое"
+  );
 }
 
 export interface WeeklyBreakdown {
