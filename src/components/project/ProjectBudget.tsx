@@ -5,6 +5,18 @@ import { formatTenge } from "@/lib/format";
 import type { ExpenseCategory, ExpenseWithCategory, Project, ProjectBudgetLine } from "@/types/database";
 import type { BudgetLinesFormValues } from "@/lib/schemas";
 
+function buildAmountsMap(
+  categories: ExpenseCategory[],
+  budgetLines: ProjectBudgetLine[]
+): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const category of categories) {
+    const existing = budgetLines.find((l) => l.category_id === category.id);
+    map[category.id] = existing && existing.planned_amount > 0 ? String(existing.planned_amount) : "";
+  }
+  return map;
+}
+
 export function ProjectBudget({
   project,
   categories,
@@ -18,16 +30,19 @@ export function ProjectBudget({
   expenses: ExpenseWithCategory[];
   onSave: (values: BudgetLinesFormValues) => Promise<{ error?: string }>;
 }) {
-  const initialAmounts = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const category of categories) {
-      const existing = initialBudgetLines.find((l) => l.category_id === category.id);
-      map[category.id] = existing && existing.planned_amount > 0 ? String(existing.planned_amount) : "";
-    }
-    return map;
-  }, [categories, initialBudgetLines]);
+  const initialAmounts = useMemo(
+    () => buildAmountsMap(categories, initialBudgetLines),
+    [categories, initialBudgetLines]
+  );
+  const hasSavedBudget = useMemo(
+    () => initialBudgetLines.some((l) => l.planned_amount > 0),
+    [initialBudgetLines]
+  );
 
+  const [savedAmounts, setSavedAmounts] = useState(initialAmounts);
   const [amounts, setAmounts] = useState<Record<string, string>>(initialAmounts);
+  const [locked, setLocked] = useState(hasSavedBudget);
+  const [hasBudget, setHasBudget] = useState(hasSavedBudget);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedNotice, setSavedNotice] = useState(false);
@@ -46,6 +61,17 @@ export function ProjectBudget({
   const plannedMargin = project.total_amount - plannedTotal;
   const actualMargin = project.total_amount - actualTotal;
 
+  function handleEdit() {
+    setError(null);
+    setLocked(false);
+  }
+
+  function handleCancel() {
+    setAmounts(savedAmounts);
+    setError(null);
+    setLocked(true);
+  }
+
   async function handleSave() {
     setSaving(true);
     setError(null);
@@ -61,6 +87,9 @@ export function ProjectBudget({
       setError(result.error);
       return;
     }
+    setSavedAmounts(amounts);
+    setLocked(true);
+    setHasBudget(true);
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 3000);
   }
@@ -88,17 +117,21 @@ export function ProjectBudget({
                 <tr key={category.id} className="border-t border-neutral-100">
                   <td className="py-2 pr-2 text-neutral-700">{category.name}</td>
                   <td className="py-2 pr-2">
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      step="any"
-                      value={amounts[category.id] ?? ""}
-                      onChange={(e) =>
-                        setAmounts((prev) => ({ ...prev, [category.id]: e.target.value }))
-                      }
-                      placeholder="0"
-                      className="w-28 rounded-lg border border-neutral-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none"
-                    />
+                    {locked ? (
+                      <span className="text-neutral-900">{planned > 0 ? formatTenge(planned) : "—"}</span>
+                    ) : (
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        step="any"
+                        value={amounts[category.id] ?? ""}
+                        onChange={(e) =>
+                          setAmounts((prev) => ({ ...prev, [category.id]: e.target.value }))
+                        }
+                        placeholder="0"
+                        className="w-28 rounded-lg border border-neutral-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none"
+                      />
+                    )}
                   </td>
                   <td className="py-2 pr-2 text-neutral-500">{plannedTotal > 0 ? `${percent}%` : "—"}</td>
                   <td className="py-2 pr-2 text-neutral-700">{formatTenge(actual)}</td>
@@ -149,13 +182,33 @@ export function ProjectBudget({
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
       <div className="mt-4 flex items-center gap-3">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-800 disabled:opacity-50"
-        >
-          {saving ? "Сохранение..." : "Сохранить план"}
-        </button>
+        {locked ? (
+          <button
+            onClick={handleEdit}
+            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-brand-300 hover:bg-brand-50"
+          >
+            Изменить
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-800 disabled:opacity-50"
+            >
+              {saving ? "Сохранение..." : "Сохранить план"}
+            </button>
+            {hasBudget && (
+              <button
+                onClick={handleCancel}
+                disabled={saving}
+                className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
+              >
+                Отмена
+              </button>
+            )}
+          </>
+        )}
         {savedNotice && <span className="text-sm text-emerald-700">Сохранено</span>}
       </div>
     </div>

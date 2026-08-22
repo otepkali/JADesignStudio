@@ -202,22 +202,6 @@ export function ProjectWorkspace({
         </div>
       </div>
 
-      {syncNotice && (
-        <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
-          {syncNotice}
-        </div>
-      )}
-
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-        <h2 className="mb-3 text-base font-semibold text-neutral-900">Добавить расход</h2>
-        <ExpenseForm
-          categories={categories}
-          subcategories={subcategories}
-          onCategoriesChange={setCategories}
-          onSubmit={handleAddExpense}
-        />
-      </div>
-
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
         <h2 className="mb-3 text-base font-semibold text-neutral-900">
           Плановая себестоимость и маржа
@@ -240,6 +224,22 @@ export function ProjectWorkspace({
           <h2 className="mb-1 text-base font-semibold text-neutral-900">Расходы по неделям</h2>
           <WeeklyBarChart data={weeklyData} />
         </div>
+      </div>
+
+      {syncNotice && (
+        <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
+          {syncNotice}
+        </div>
+      )}
+
+      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
+        <h2 className="mb-3 text-base font-semibold text-neutral-900">Добавить расход</h2>
+        <ExpenseForm
+          categories={categories}
+          subcategories={subcategories}
+          onCategoriesChange={setCategories}
+          onSubmit={handleAddExpense}
+        />
       </div>
 
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
