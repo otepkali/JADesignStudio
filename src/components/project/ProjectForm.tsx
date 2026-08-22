@@ -13,11 +13,15 @@ export function ProjectForm() {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ProjectFormInput, unknown, ProjectFormValues>({
     resolver: zodResolver(projectSchema),
-    defaultValues: { prepayment_percent: 50 },
+    defaultValues: { prepayment_percent: 50, project_type: "turnkey" },
   });
+
+  const projectType = watch("project_type");
 
   async function onSubmit(values: ProjectFormValues) {
     setServerError(null);
@@ -31,6 +35,40 @@ export function ProjectForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <label className="mb-2 block text-sm font-medium text-neutral-700">Тип проекта</label>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setValue("project_type", "turnkey")}
+            className={`rounded-xl border p-3 text-left transition ${
+              projectType === "turnkey"
+                ? "border-brand-500 bg-brand-50 ring-2 ring-brand-100"
+                : "border-neutral-300 hover:border-brand-300"
+            }`}
+          >
+            <p className="font-medium text-neutral-900">Ремонт под ключ</p>
+            <p className="mt-0.5 text-xs text-neutral-500">
+              Материалы, монтажные работы — полная себестоимость по статьям расходов
+            </p>
+          </button>
+          <button
+            type="button"
+            onClick={() => setValue("project_type", "design")}
+            className={`rounded-xl border p-3 text-left transition ${
+              projectType === "design"
+                ? "border-brand-500 bg-brand-50 ring-2 ring-brand-100"
+                : "border-neutral-300 hover:border-brand-300"
+            }`}
+          >
+            <p className="font-medium text-neutral-900">Дизайн проект</p>
+            <p className="mt-0.5 text-xs text-neutral-500">
+              Оплата дизайнеру-комплектатору, визуализатору, архитектору и печать документов
+            </p>
+          </button>
+        </div>
+      </div>
+
       <div>
         <label className="mb-1 block text-sm font-medium text-neutral-700">
           Название объекта

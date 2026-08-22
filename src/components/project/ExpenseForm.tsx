@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { expenseSchema, type ExpenseFormInput, type ExpenseFormValues } from "@/lib/schemas";
 import { addCategory } from "@/app/(app)/projects/[id]/actions";
-import type { ExpenseCategory, ExpenseSubcategory } from "@/types/database";
+import type { ExpenseCategory, ExpenseSubcategory, ProjectType } from "@/types/database";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -14,6 +14,7 @@ function todayISO() {
 export function ExpenseForm({
   categories,
   subcategories,
+  projectType,
   onCategoriesChange,
   onSubmit: onSubmitValues,
   defaultValues,
@@ -22,6 +23,7 @@ export function ExpenseForm({
 }: {
   categories: ExpenseCategory[];
   subcategories: ExpenseSubcategory[];
+  projectType: ProjectType;
   onCategoriesChange: (categories: ExpenseCategory[]) => void;
   onSubmit: (values: ExpenseFormValues) => Promise<{ error?: string }>;
   defaultValues?: Partial<ExpenseFormInput>;
@@ -54,7 +56,7 @@ export function ExpenseForm({
   const subcategoryOptions = subcategories.filter((s) => s.category_id === categoryId);
 
   async function handleAddCategory() {
-    const result = await addCategory(newCategoryName);
+    const result = await addCategory(newCategoryName, projectType);
     if ("error" in result) {
       setServerError(result.error);
       return;

@@ -7,6 +7,7 @@ create table if not exists projects (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null default auth.uid(),
   name text not null,
+  project_type text not null default 'turnkey' check (project_type in ('turnkey', 'design')),
   total_amount numeric not null,
   deadline date,
   prepayment_percent numeric not null default 50,
@@ -27,15 +28,17 @@ create table if not exists payments (
 create table if not exists expense_categories (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null default auth.uid(),
-  name text not null
+  name text not null,
+  project_type text not null default 'turnkey' check (project_type in ('turnkey', 'design'))
 );
 
 create unique index if not exists expense_categories_name_unique
   on expense_categories (name);
 
-insert into expense_categories (name) values
-  ('Электрика'), ('Сантехника'), ('Отделочные материалы'),
-  ('Черновые материалы'), ('Мебель и декор'), ('Монтажные работы'), ('Прочее')
+insert into expense_categories (name, project_type) values
+  ('Электрика', 'turnkey'), ('Сантехника', 'turnkey'), ('Отделочные материалы', 'turnkey'),
+  ('Черновые материалы', 'turnkey'), ('Мебель и декор', 'turnkey'), ('Монтажные работы', 'turnkey'), ('Прочее', 'turnkey'),
+  ('Оплата сотрудникам', 'design'), ('Распечатка бумаг', 'design')
 on conflict do nothing;
 
 create table if not exists expense_subcategories (
@@ -69,7 +72,10 @@ join (values
   ('Мебель и декор', 'Консоль'),
   ('Мебель и декор', 'Стол'),
   ('Мебель и декор', 'Стулья'),
-  ('Мебель и декор', 'Журнальные столики')
+  ('Мебель и декор', 'Журнальные столики'),
+  ('Оплата сотрудникам', 'Дизайнер/комплектатор'),
+  ('Оплата сотрудникам', 'Визуализатор'),
+  ('Оплата сотрудникам', 'Архитектор')
 ) as sub(category_name, name) on ec.name = sub.category_name
 on conflict do nothing;
 

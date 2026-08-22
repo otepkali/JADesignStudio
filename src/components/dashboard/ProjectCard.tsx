@@ -16,7 +16,13 @@ export function ProjectCard({ project, totals }: ProjectWithTotals) {
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="font-semibold text-neutral-900">{project.name}</h3>
-          <p className="text-sm text-neutral-500">{formatTenge(project.total_amount)}</p>
+          <p className="text-sm text-neutral-500">
+            {formatTenge(project.total_amount)}
+            <span className="mx-1.5 text-neutral-300">·</span>
+            <span className="text-brand-700">
+              {project.project_type === "design" ? "Дизайн проект" : "Ремонт под ключ"}
+            </span>
+          </p>
         </div>
         <span
           className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${

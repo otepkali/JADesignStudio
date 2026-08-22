@@ -19,6 +19,7 @@ import type {
   Payment,
   Project,
   ProjectBudgetLine,
+  ProjectType,
 } from "@/types/database";
 
 export async function updateProject(
@@ -243,7 +244,8 @@ export async function resyncExpense(
 }
 
 export async function addCategory(
-  name: string
+  name: string,
+  projectType: ProjectType
 ): Promise<{ error: string } | { category: ExpenseCategory }> {
   const trimmed = name.trim();
   if (!trimmed) return { error: "Введите название категории" };
@@ -256,7 +258,7 @@ export async function addCategory(
 
   const { data, error } = await supabase
     .from("expense_categories")
-    .insert({ user_id: user.id, name: trimmed })
+    .insert({ user_id: user.id, name: trimmed, project_type: projectType })
     .select()
     .single();
 

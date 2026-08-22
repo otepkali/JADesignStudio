@@ -3,13 +3,19 @@
 import { useMemo, useState } from "react";
 import { formatDate, formatTenge } from "@/lib/format";
 import { ExpenseForm } from "@/components/project/ExpenseForm";
-import type { ExpenseCategory, ExpenseSubcategory, ExpenseWithCategory } from "@/types/database";
+import type {
+  ExpenseCategory,
+  ExpenseSubcategory,
+  ExpenseWithCategory,
+  ProjectType,
+} from "@/types/database";
 import type { ExpenseFormValues } from "@/lib/schemas";
 
 export function ExpensesTable({
   expenses,
   categories,
   subcategories,
+  projectType,
   onCategoriesChange,
   onUpdate,
   onDelete,
@@ -18,6 +24,7 @@ export function ExpensesTable({
   expenses: ExpenseWithCategory[];
   categories: ExpenseCategory[];
   subcategories: ExpenseSubcategory[];
+  projectType: ProjectType;
   onCategoriesChange: (categories: ExpenseCategory[]) => void;
   onUpdate: (expenseId: string, values: ExpenseFormValues) => Promise<{ error?: string }>;
   onDelete: (expenseId: string) => Promise<void>;
@@ -64,6 +71,7 @@ export function ExpensesTable({
                 <ExpenseForm
                   categories={categories}
                   subcategories={subcategories}
+                  projectType={projectType}
                   onCategoriesChange={onCategoriesChange}
                   submitLabel="Сохранить"
                   onCancel={() => setEditingId(null)}

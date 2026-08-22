@@ -1,10 +1,12 @@
 export type ProjectStatus = "in_progress" | "completed";
 export type PaymentType = "prepayment" | "additional" | "final";
+export type ProjectType = "turnkey" | "design";
 
 export interface Project {
   id: string;
   user_id: string | null;
   name: string;
+  project_type: ProjectType;
   total_amount: number;
   deadline: string | null;
   prepayment_percent: number;
@@ -26,6 +28,7 @@ export interface ExpenseCategory {
   id: string;
   user_id: string | null;
   name: string;
+  project_type: ProjectType;
 }
 
 export interface ExpenseSubcategory {

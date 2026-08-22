@@ -156,8 +156,8 @@ export function ProjectWorkspace({
           <div>
             <h1 className="text-xl font-semibold text-neutral-900">{project.name}</h1>
             <p className="text-sm text-neutral-500">
-              Дедлайн: {formatDate(project.deadline)} ·{" "}
-              {project.status === "completed" ? "Завершён" : "В работе"}
+              {project.project_type === "design" ? "Дизайн проект" : "Ремонт под ключ"} · Дедлайн:{" "}
+              {formatDate(project.deadline)} · {project.status === "completed" ? "Завершён" : "В работе"}
             </p>
           </div>
           <div className="flex shrink-0 gap-2">
@@ -237,6 +237,7 @@ export function ProjectWorkspace({
         <ExpenseForm
           categories={categories}
           subcategories={subcategories}
+          projectType={project.project_type}
           onCategoriesChange={setCategories}
           onSubmit={handleAddExpense}
         />
@@ -248,6 +249,7 @@ export function ProjectWorkspace({
           expenses={expenses}
           categories={categories}
           subcategories={subcategories}
+          projectType={project.project_type}
           onCategoriesChange={setCategories}
           onUpdate={handleUpdateExpense}
           onDelete={handleDeleteExpense}

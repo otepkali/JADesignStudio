@@ -1,16 +1,24 @@
 import { z } from "zod";
 
-export const projectSchema = z.object({
+const projectBaseFields = {
   name: z.string().min(1, "Укажите название объекта"),
   total_amount: z.coerce.number().positive("Сумма должна быть больше нуля"),
   deadline: z.string().optional().or(z.literal("")),
   prepayment_percent: z.coerce.number().min(0).max(100),
+};
+
+export const projectSchema = z.object({
+  ...projectBaseFields,
+  project_type: z.enum(["turnkey", "design"]),
 });
 
 export type ProjectFormValues = z.output<typeof projectSchema>;
 export type ProjectFormInput = z.input<typeof projectSchema>;
 
-export const projectUpdateSchema = projectSchema.extend({
+// project_type is set once at creation and is not editable afterwards, since
+// switching it would orphan expenses tied to the other type's categories.
+export const projectUpdateSchema = z.object({
+  ...projectBaseFields,
   status: z.enum(["in_progress", "completed"]),
 });
 

@@ -119,7 +119,11 @@ export async function getProjectDetail(id: string): Promise<ProjectDetail | null
       .select("*, expense_categories(*), expense_subcategories(*)")
       .eq("project_id", id)
       .order("expense_date", { ascending: false }),
-    supabase.from("expense_categories").select("*").order("name"),
+    supabase
+      .from("expense_categories")
+      .select("*")
+      .eq("project_type", project.project_type)
+      .order("name"),
     supabase.from("expense_subcategories").select("*").order("name"),
     supabase.from("project_budget_lines").select("*").eq("project_id", id),
   ]);

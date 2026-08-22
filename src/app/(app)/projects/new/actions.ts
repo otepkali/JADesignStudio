@@ -10,7 +10,7 @@ export async function createProject(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Неверные данные" };
   }
-  const { name, total_amount, deadline, prepayment_percent } = parsed.data;
+  const { name, total_amount, deadline, prepayment_percent, project_type } = parsed.data;
 
   const supabase = await createClient();
   const {
@@ -26,6 +26,7 @@ export async function createProject(
     .insert({
       user_id: user.id,
       name,
+      project_type,
       total_amount,
       deadline: deadline || null,
       prepayment_percent,
