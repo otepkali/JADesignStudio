@@ -286,3 +286,18 @@ export async function getBusinessBalance(): Promise<BusinessBalance> {
     unassigned,
   };
 }
+
+export async function getOpeningBalances(): Promise<Record<AccountId, number>> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("payments")
+    .select("account, amount")
+    .eq("payment_type", "opening_balance")
+    .is("project_id", null);
+
+  const result: Record<AccountId, number> = { cash: 0, ip_account: 0, personal_account: 0 };
+  for (const row of data ?? []) {
+    if (row.account) result[row.account as AccountId] = Number(row.amount);
+  }
+  return result;
+}

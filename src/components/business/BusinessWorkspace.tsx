@@ -7,6 +7,7 @@ import { groupExpensesByCategory } from "@/lib/analytics";
 import { ExpenseForm } from "@/components/project/ExpenseForm";
 import { ExpensesTable } from "@/components/project/ExpensesTable";
 import { CategoryPieChart } from "@/components/project/CategoryPieChart";
+import { OpeningBalances } from "@/components/business/OpeningBalances";
 import {
   addExpense,
   deleteExpense,
@@ -14,17 +15,19 @@ import {
   updateExpense,
 } from "@/app/(app)/projects/[id]/actions";
 import type { BusinessBalance } from "@/lib/data";
-import type { ExpenseCategory, ExpenseWithCategory } from "@/types/database";
+import type { AccountId, ExpenseCategory, ExpenseWithCategory } from "@/types/database";
 import type { ExpenseFormValues } from "@/lib/schemas";
 
 export function BusinessWorkspace({
   initialBalance,
   initialCategories,
   initialExpenses,
+  initialOpeningBalances,
 }: {
   initialBalance: BusinessBalance;
   initialCategories: ExpenseCategory[];
   initialExpenses: ExpenseWithCategory[];
+  initialOpeningBalances: Record<AccountId, number>;
 }) {
   const router = useRouter();
   const [balance, setBalance] = useState(initialBalance);
@@ -161,6 +164,8 @@ export function BusinessWorkspace({
           добавления счетов.
         </div>
       )}
+
+      <OpeningBalances initial={initialOpeningBalances} />
 
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
         <h2 className="mb-1 text-base font-semibold text-neutral-900">

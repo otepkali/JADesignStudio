@@ -1,5 +1,5 @@
 export type ProjectStatus = "in_progress" | "completed";
-export type PaymentType = "prepayment" | "additional" | "final";
+export type PaymentType = "prepayment" | "additional" | "final" | "opening_balance";
 export type ProjectType = "turnkey" | "design";
 // Scope of an expense category: 'turnkey'/'design' tie it to that project
 // type, 'admin' is for business/overhead expenses not tied to any project.
@@ -26,7 +26,7 @@ export interface Account {
 
 export interface Payment {
   id: string;
-  project_id: string;
+  project_id: string | null;
   amount: number;
   payment_type: PaymentType;
   account: AccountId | null;
