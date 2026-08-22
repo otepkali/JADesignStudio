@@ -67,6 +67,7 @@ export async function createProject(
     project_id: project.id,
     amount: prepaymentAmount,
     payment_type: "prepayment",
+    account: "ip_account",
     note: "Предоплата при создании проекта",
   });
 

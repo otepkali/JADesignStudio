@@ -18,11 +18,25 @@ create table if not exists projects (
 
 create unique index if not exists projects_slug_unique on projects (slug);
 
+-- Accounts money actually sits in / moves through — used to tag every
+-- payment and expense so the business balance can be split by account.
+create table if not exists accounts (
+  id text primary key,
+  name text not null
+);
+
+insert into accounts (id, name) values
+  ('cash', 'Наличка'),
+  ('ip_account', 'Счёт ИП'),
+  ('personal_account', 'Счёт физ. лица')
+on conflict do nothing;
+
 create table if not exists payments (
   id uuid primary key default gen_random_uuid(),
   project_id uuid references projects(id) on delete cascade,
   amount numeric not null,
   payment_type text not null, -- 'prepayment' | 'additional' | 'final'
+  account text references accounts(id),
   paid_at date not null default current_date,
   note text,
   created_at timestamptz default now()
@@ -32,7 +46,9 @@ create table if not exists expense_categories (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null default auth.uid(),
   name text not null,
-  project_type text not null default 'turnkey' check (project_type in ('turnkey', 'design'))
+  -- 'turnkey' | 'design' scope a category to that project type; 'admin' is
+  -- for business/overhead expenses not tied to any project.
+  project_type text not null default 'turnkey' check (project_type in ('turnkey', 'design', 'admin'))
 );
 
 create unique index if not exists expense_categories_name_unique
@@ -41,7 +57,8 @@ create unique index if not exists expense_categories_name_unique
 insert into expense_categories (name, project_type) values
   ('Электрика', 'turnkey'), ('Сантехника', 'turnkey'), ('Отделочные материалы', 'turnkey'),
   ('Черновые материалы', 'turnkey'), ('Мебель и декор', 'turnkey'), ('Монтажные работы', 'turnkey'), ('Прочее', 'turnkey'),
-  ('Оплата сотрудникам', 'design'), ('Распечатка бумаг', 'design')
+  ('Оплата сотрудникам', 'design'), ('Распечатка бумаг', 'design'),
+  ('Аренда офиса', 'admin'), ('Обучение', 'admin'), ('Командировки сотрудников', 'admin'), ('Прочее (бизнес)', 'admin')
 on conflict do nothing;
 
 create table if not exists expense_subcategories (
@@ -84,6 +101,7 @@ on conflict do nothing;
 
 create table if not exists expenses (
   id uuid primary key default gen_random_uuid(),
+  -- null project_id = a business/admin expense, not tied to any project.
   project_id uuid references projects(id) on delete cascade,
   category_id uuid references expense_categories(id),
   subcategory_id uuid references expense_subcategories(id),
@@ -92,6 +110,12 @@ create table if not exists expenses (
   unit text,
   unit_price numeric,
   total_price numeric not null,
+  account text references accounts(id),
+  -- Supplier bonus/cashback earned on this purchase (e.g. "10% back on
+  -- payments over 1M"), tracked as income to the business, separate from
+  -- the project's own cost/margin numbers.
+  bonus_percent numeric,
+  bonus_amount numeric,
   expense_date date not null default current_date,
   note text,
   synced_to_sheets boolean default false,
@@ -127,6 +151,12 @@ alter table expense_categories enable row level security;
 alter table expense_subcategories enable row level security;
 alter table expenses enable row level security;
 alter table project_budget_lines enable row level security;
+alter table accounts enable row level security;
+
+create policy "accounts_authenticated_all" on accounts
+  for all
+  using (auth.uid() is not null)
+  with check (auth.uid() is not null);
 
 create policy "projects_authenticated_all" on projects
   for all

@@ -1,4 +1,6 @@
 import { google } from "googleapis";
+import { ACCOUNT_LABELS } from "@/lib/accounts";
+import type { AccountId } from "@/types/database";
 
 export interface ExpenseSheetRow {
   date: string;
@@ -11,6 +13,8 @@ export interface ExpenseSheetRow {
   unitPrice: number | null;
   totalPrice: number;
   note: string | null;
+  account?: AccountId | null;
+  bonusAmount?: number | null;
 }
 
 function getSheetsClient() {
@@ -36,7 +40,7 @@ export async function appendExpenseRow(row: ExpenseSheetRow) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: sheetId,
-    range: "A:J",
+    range: "A:L",
     valueInputOption: "USER_ENTERED",
     insertDataOption: "INSERT_ROWS",
     requestBody: {
@@ -52,6 +56,8 @@ export async function appendExpenseRow(row: ExpenseSheetRow) {
           row.unitPrice ?? "",
           row.totalPrice,
           row.note ?? "",
+          row.account ? ACCOUNT_LABELS[row.account] : "",
+          row.bonusAmount ?? "",
         ],
       ],
     },

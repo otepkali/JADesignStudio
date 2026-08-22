@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { calculateProjectTotals, type ProjectTotals } from "@/lib/calculations";
 import { UUID_RE } from "@/lib/slug";
+import { ACCOUNTS } from "@/lib/accounts";
 import type {
   Project,
   ExpenseWithCategory,
@@ -9,6 +10,7 @@ import type {
   ExpenseCategory,
   ExpenseSubcategory,
   ProjectBudgetLine,
+  AccountId,
 } from "@/types/database";
 
 export interface ProjectWithTotals {
@@ -73,6 +75,7 @@ export async function getDashboardSummary(
   const { data: monthExpenses } = await supabase
     .from("expenses")
     .select("total_price")
+    .not("project_id", "is", null)
     .gte("expense_date", monthStart);
 
   const currentMonthExpenses = (monthExpenses ?? []).reduce(
@@ -146,7 +149,21 @@ export async function getProjectDetail(idOrSlug: string): Promise<ProjectDetail 
 
 export async function getExpenseCategories(): Promise<ExpenseCategory[]> {
   const supabase = await createClient();
-  const { data } = await supabase.from("expense_categories").select("*").order("name");
+  const { data } = await supabase
+    .from("expense_categories")
+    .select("*")
+    .neq("project_type", "admin")
+    .order("name");
+  return data ?? [];
+}
+
+export async function getAdminExpenseCategories(): Promise<ExpenseCategory[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("expense_categories")
+    .select("*")
+    .eq("project_type", "admin")
+    .order("name");
   return data ?? [];
 }
 
@@ -167,7 +184,10 @@ export async function getFilteredExpenses(
   filters: AnalyticsFilters
 ): Promise<ExpenseWithCategory[]> {
   const supabase = await createClient();
-  let query = supabase.from("expenses").select("*, expense_categories(*), expense_subcategories(*)");
+  let query = supabase
+    .from("expenses")
+    .select("*, expense_categories(*), expense_subcategories(*)")
+    .not("project_id", "is", null);
 
   if (filters.projectId) query = query.eq("project_id", filters.projectId);
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
@@ -176,4 +196,93 @@ export async function getFilteredExpenses(
 
   const { data } = await query.order("expense_date", { ascending: false });
   return (data ?? []) as unknown as ExpenseWithCategory[];
+}
+
+export interface AdminExpenseDetail {
+  categories: ExpenseCategory[];
+  expenses: ExpenseWithCategory[];
+}
+
+export async function getAdminExpenseDetail(): Promise<AdminExpenseDetail> {
+  const supabase = await createClient();
+
+  const [{ data: categories }, { data: expenses }] = await Promise.all([
+    supabase.from("expense_categories").select("*").eq("project_type", "admin").order("name"),
+    supabase
+      .from("expenses")
+      .select("*, expense_categories(*), expense_subcategories(*)")
+      .is("project_id", null)
+      .order("expense_date", { ascending: false }),
+  ]);
+
+  return {
+    categories: categories ?? [],
+    expenses: (expenses ?? []) as unknown as ExpenseWithCategory[],
+  };
+}
+
+export interface AccountBalance {
+  account: AccountId;
+  name: string;
+  received: number;
+  spent: number;
+  bonuses: number;
+  balance: number;
+}
+
+export interface BusinessBalance {
+  totalReceived: number;
+  totalSpent: number;
+  totalBonuses: number;
+  totalBalance: number;
+  byAccount: AccountBalance[];
+  unassigned: { received: number; spent: number; bonuses: number };
+}
+
+export async function getBusinessBalance(): Promise<BusinessBalance> {
+  const supabase = await createClient();
+
+  const [{ data: payments }, { data: expenses }] = await Promise.all([
+    supabase.from("payments").select("amount, account"),
+    supabase.from("expenses").select("total_price, account, bonus_amount"),
+  ]);
+
+  const buckets = new Map<AccountId, { received: number; spent: number; bonuses: number }>();
+  for (const acc of ACCOUNTS) buckets.set(acc.id, { received: 0, spent: 0, bonuses: 0 });
+  const unassigned = { received: 0, spent: 0, bonuses: 0 };
+
+  for (const p of payments ?? []) {
+    const bucket = p.account && buckets.has(p.account) ? buckets.get(p.account)! : unassigned;
+    bucket.received += Number(p.amount);
+  }
+  for (const e of expenses ?? []) {
+    const bucket = e.account && buckets.has(e.account) ? buckets.get(e.account)! : unassigned;
+    bucket.spent += Number(e.total_price);
+    if (e.bonus_amount) bucket.bonuses += Number(e.bonus_amount);
+  }
+
+  const byAccount: AccountBalance[] = ACCOUNTS.map((acc) => {
+    const b = buckets.get(acc.id)!;
+    return {
+      account: acc.id,
+      name: acc.name,
+      received: b.received,
+      spent: b.spent,
+      bonuses: b.bonuses,
+      balance: b.received - b.spent + b.bonuses,
+    };
+  });
+
+  const totalReceived = byAccount.reduce((s, a) => s + a.received, 0) + unassigned.received;
+  const totalSpent = byAccount.reduce((s, a) => s + a.spent, 0) + unassigned.spent;
+  const totalBonuses = byAccount.reduce((s, a) => s + a.bonuses, 0) + unassigned.bonuses;
+
+  return {
+    totalReceived,
+    totalSpent,
+    totalBonuses,
+    totalBalance: totalReceived - totalSpent + totalBonuses,
+    byAccount,
+    unassigned,
+  };
 }

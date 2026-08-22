@@ -3,11 +3,12 @@
 import { useMemo, useState } from "react";
 import { formatDate, formatTenge } from "@/lib/format";
 import { ExpenseForm } from "@/components/project/ExpenseForm";
+import { ACCOUNT_LABELS } from "@/lib/accounts";
 import type {
+  CategoryScope,
   ExpenseCategory,
   ExpenseSubcategory,
   ExpenseWithCategory,
-  ProjectType,
 } from "@/types/database";
 import type { ExpenseFormValues } from "@/lib/schemas";
 
@@ -24,7 +25,7 @@ export function ExpensesTable({
   expenses: ExpenseWithCategory[];
   categories: ExpenseCategory[];
   subcategories: ExpenseSubcategory[];
-  projectType: ProjectType;
+  projectType: CategoryScope;
   onCategoriesChange: (categories: ExpenseCategory[]) => void;
   onUpdate: (expenseId: string, values: ExpenseFormValues) => Promise<{ error?: string }>;
   onDelete: (expenseId: string) => Promise<void>;
@@ -85,6 +86,12 @@ export function ExpensesTable({
                     unit_price: expense.unit_price ?? undefined,
                     total_price: expense.total_price,
                     expense_date: expense.expense_date,
+                    account: expense.account ?? "ip_account",
+                    bonus_enabled: expense.bonus_amount != null,
+                    bonus_mode: expense.bonus_percent != null ? "percent" : "fixed",
+                    bonus_percent: expense.bonus_percent ?? undefined,
+                    bonus_fixed_amount:
+                      expense.bonus_percent == null ? expense.bonus_amount ?? undefined : undefined,
                     note: expense.note ?? "",
                   }}
                   onSubmit={(values) => onUpdate(expense.id, values)}
@@ -103,7 +110,14 @@ export function ExpensesTable({
                     {" · "}
                     {formatDate(expense.expense_date)}
                     {expense.quantity ? ` · ${expense.quantity} ${expense.unit ?? ""}` : ""}
+                    {expense.account ? ` · ${ACCOUNT_LABELS[expense.account]}` : ""}
                   </p>
+                  {expense.bonus_amount ? (
+                    <p className="mt-1 text-xs text-emerald-700">
+                      Бонус от поставщика: {formatTenge(expense.bonus_amount)}
+                      {expense.bonus_percent ? ` (${expense.bonus_percent}%)` : ""}
+                    </p>
+                  ) : null}
                   {expense.note && <p className="mt-1 text-xs text-neutral-400">{expense.note}</p>}
                   {!expense.synced_to_sheets && (
                     <button

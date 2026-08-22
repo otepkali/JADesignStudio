@@ -34,6 +34,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <Link href="/analytics" className="text-neutral-600 hover:text-brand-700">
               Аналитика
             </Link>
+            <Link href="/business" className="text-neutral-600 hover:text-brand-700">
+              Бизнес
+            </Link>
             <form action="/auth/signout" method="post">
               <button
                 type="submit"

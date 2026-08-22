@@ -14,12 +14,12 @@ import {
   type ProjectUpdateFormValues,
 } from "@/lib/schemas";
 import type {
+  CategoryScope,
   ExpenseCategory,
   ExpenseWithCategory,
   Payment,
   Project,
   ProjectBudgetLine,
-  ProjectType,
 } from "@/types/database";
 
 export async function updateProject(
@@ -85,6 +85,7 @@ export async function addPayment(
       project_id: projectId,
       amount: parsed.data.amount,
       payment_type: parsed.data.payment_type,
+      account: parsed.data.account,
       paid_at: parsed.data.paid_at,
       note: parsed.data.note || null,
     })
@@ -107,6 +108,20 @@ function resolveTotalPrice(values: ExpenseFormValues): number {
   return Number(values.unit_price) * Number(values.quantity ?? 1);
 }
 
+function resolveBonus(
+  values: ExpenseFormValues,
+  totalPrice: number
+): { bonus_amount: number | null; bonus_percent: number | null } {
+  if (!values.bonus_enabled) return { bonus_amount: null, bonus_percent: null };
+
+  if (values.bonus_mode === "fixed") {
+    return { bonus_amount: values.bonus_fixed_amount ?? null, bonus_percent: null };
+  }
+
+  const percent = values.bonus_percent ?? 0;
+  return { bonus_amount: (totalPrice * percent) / 100, bonus_percent: percent };
+}
+
 async function syncExpenseToSheets(supabase: Awaited<ReturnType<typeof createClient>>, expenseId: string) {
   const { data: expense } = await supabase
     .from("expenses")
@@ -119,7 +134,9 @@ async function syncExpenseToSheets(supabase: Awaited<ReturnType<typeof createCli
   try {
     await appendExpenseRow({
       date: expense.expense_date,
-      projectName: (expense.projects as unknown as { name: string } | null)?.name ?? "",
+      projectName:
+        (expense.projects as unknown as { name: string } | null)?.name ??
+        "Административные расходы",
       categoryName: (expense.expense_categories as unknown as { name: string } | null)?.name ?? "",
       subcategoryName:
         (expense.expense_subcategories as unknown as { name: string } | null)?.name ?? "",
@@ -129,6 +146,8 @@ async function syncExpenseToSheets(supabase: Awaited<ReturnType<typeof createCli
       unitPrice: expense.unit_price,
       totalPrice: expense.total_price,
       note: expense.note,
+      account: expense.account,
+      bonusAmount: expense.bonus_amount,
     });
     await supabase.from("expenses").update({ synced_to_sheets: true }).eq("id", expenseId);
     return true;
@@ -138,8 +157,12 @@ async function syncExpenseToSheets(supabase: Awaited<ReturnType<typeof createCli
   }
 }
 
+function projectPath(projectId: string | null): string {
+  return projectId ? `/projects/${projectId}` : "/business";
+}
+
 export async function addExpense(
-  projectId: string,
+  projectId: string | null,
   values: ExpenseFormValues
 ): Promise<{ error: string } | { expense: ExpenseWithCategory; syncFailed: boolean }> {
   const parsed = expenseSchema.safeParse(values);
@@ -148,6 +171,7 @@ export async function addExpense(
   }
   const v = parsed.data;
   const totalPrice = resolveTotalPrice(v);
+  const bonus = resolveBonus(v, totalPrice);
 
   const supabase = await createClient();
   const { data: inserted, error } = await supabase
@@ -161,6 +185,9 @@ export async function addExpense(
       unit: v.unit || null,
       unit_price: v.entry_mode === "unit_price" ? v.unit_price ?? null : null,
       total_price: totalPrice,
+      account: v.account || null,
+      bonus_amount: bonus.bonus_amount,
+      bonus_percent: bonus.bonus_percent,
       expense_date: v.expense_date,
       note: v.note || null,
     })
@@ -173,7 +200,7 @@ export async function addExpense(
 
   const synced = await syncExpenseToSheets(supabase, inserted.id);
 
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath(projectPath(projectId));
   revalidatePath("/");
   revalidatePath("/analytics");
 
@@ -185,7 +212,7 @@ export async function addExpense(
 
 export async function updateExpense(
   expenseId: string,
-  projectId: string,
+  projectId: string | null,
   values: ExpenseFormValues
 ): Promise<{ error: string } | { expense: ExpenseWithCategory; syncFailed: boolean }> {
   const parsed = expenseSchema.safeParse(values);
@@ -194,6 +221,7 @@ export async function updateExpense(
   }
   const v = parsed.data;
   const totalPrice = resolveTotalPrice(v);
+  const bonus = resolveBonus(v, totalPrice);
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -206,6 +234,9 @@ export async function updateExpense(
       unit: v.unit || null,
       unit_price: v.entry_mode === "unit_price" ? v.unit_price ?? null : null,
       total_price: totalPrice,
+      account: v.account || null,
+      bonus_amount: bonus.bonus_amount,
+      bonus_percent: bonus.bonus_percent,
       expense_date: v.expense_date,
       note: v.note || null,
       synced_to_sheets: false,
@@ -220,7 +251,7 @@ export async function updateExpense(
 
   const synced = await syncExpenseToSheets(supabase, expenseId);
 
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath(projectPath(projectId));
   revalidatePath("/");
   revalidatePath("/analytics");
 
@@ -232,7 +263,7 @@ export async function updateExpense(
 
 export async function deleteExpense(
   expenseId: string,
-  projectId: string
+  projectId: string | null
 ): Promise<{ error: string } | { success: true }> {
   const supabase = await createClient();
   const { error } = await supabase.from("expenses").delete().eq("id", expenseId);
@@ -241,7 +272,7 @@ export async function deleteExpense(
     return { error: error.message };
   }
 
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath(projectPath(projectId));
   revalidatePath("/");
   revalidatePath("/analytics");
   return { success: true };
@@ -249,17 +280,17 @@ export async function deleteExpense(
 
 export async function resyncExpense(
   expenseId: string,
-  projectId: string
+  projectId: string | null
 ): Promise<{ synced: boolean }> {
   const supabase = await createClient();
   const synced = await syncExpenseToSheets(supabase, expenseId);
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath(projectPath(projectId));
   return { synced };
 }
 
 export async function addCategory(
   name: string,
-  projectType: ProjectType
+  projectType: CategoryScope
 ): Promise<{ error: string } | { category: ExpenseCategory }> {
   const trimmed = name.trim();
   if (!trimmed) return { error: "Введите название категории" };

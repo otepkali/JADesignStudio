@@ -1,6 +1,10 @@
 export type ProjectStatus = "in_progress" | "completed";
 export type PaymentType = "prepayment" | "additional" | "final";
 export type ProjectType = "turnkey" | "design";
+// Scope of an expense category: 'turnkey'/'design' tie it to that project
+// type, 'admin' is for business/overhead expenses not tied to any project.
+export type CategoryScope = "turnkey" | "design" | "admin";
+export type AccountId = "cash" | "ip_account" | "personal_account";
 
 export interface Project {
   id: string;
@@ -15,11 +19,17 @@ export interface Project {
   created_at: string;
 }
 
+export interface Account {
+  id: AccountId;
+  name: string;
+}
+
 export interface Payment {
   id: string;
   project_id: string;
   amount: number;
   payment_type: PaymentType;
+  account: AccountId | null;
   paid_at: string;
   note: string | null;
   created_at: string;
@@ -29,7 +39,7 @@ export interface ExpenseCategory {
   id: string;
   user_id: string | null;
   name: string;
-  project_type: ProjectType;
+  project_type: CategoryScope;
 }
 
 export interface ExpenseSubcategory {
@@ -40,7 +50,7 @@ export interface ExpenseSubcategory {
 
 export interface Expense {
   id: string;
-  project_id: string;
+  project_id: string | null;
   category_id: string | null;
   subcategory_id: string | null;
   material_name: string;
@@ -48,6 +58,9 @@ export interface Expense {
   unit: string | null;
   unit_price: number | null;
   total_price: number;
+  account: AccountId | null;
+  bonus_percent: number | null;
+  bonus_amount: number | null;
   expense_date: string;
   note: string | null;
   synced_to_sheets: boolean;

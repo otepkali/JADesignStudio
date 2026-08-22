@@ -37,7 +37,9 @@ export async function POST(request: Request) {
     try {
       await appendExpenseRow({
         date: expense.expense_date,
-        projectName: (expense.projects as unknown as { name: string } | null)?.name ?? "",
+        projectName:
+          (expense.projects as unknown as { name: string } | null)?.name ??
+          "Административные расходы",
         categoryName:
           (expense.expense_categories as unknown as { name: string } | null)?.name ?? "",
         subcategoryName:
@@ -48,6 +50,8 @@ export async function POST(request: Request) {
         unitPrice: expense.unit_price,
         totalPrice: expense.total_price,
         note: expense.note,
+        account: expense.account,
+        bonusAmount: expense.bonus_amount,
       });
       await supabase.from("expenses").update({ synced_to_sheets: true }).eq("id", expense.id);
       synced += 1;

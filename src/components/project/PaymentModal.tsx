@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { paymentSchema, type PaymentFormInput, type PaymentFormValues } from "@/lib/schemas";
+import { ACCOUNTS } from "@/lib/accounts";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -26,7 +27,7 @@ export function PaymentModal({
     formState: { errors, isSubmitting },
   } = useForm<PaymentFormInput, unknown, PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
-    defaultValues: { payment_type: "additional", paid_at: todayISO() },
+    defaultValues: { payment_type: "additional", paid_at: todayISO(), account: "ip_account" },
   });
 
   if (!open) return null;
@@ -38,7 +39,13 @@ export function PaymentModal({
       setServerError(result.error);
       return;
     }
-    reset({ payment_type: "additional", paid_at: todayISO(), amount: undefined, note: "" });
+    reset({
+      payment_type: "additional",
+      paid_at: todayISO(),
+      account: values.account,
+      amount: undefined,
+      note: "",
+    });
     onClose();
   }
 
@@ -72,6 +79,19 @@ export function PaymentModal({
             >
               <option value="additional">Доплата</option>
               <option value="final">Финальный расчёт</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-neutral-700">Счёт</label>
+            <select
+              {...register("account")}
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+            >
+              {ACCOUNTS.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
             </select>
           </div>
           <div>

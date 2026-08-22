@@ -5,7 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { expenseSchema, type ExpenseFormInput, type ExpenseFormValues } from "@/lib/schemas";
 import { addCategory } from "@/app/(app)/projects/[id]/actions";
-import type { ExpenseCategory, ExpenseSubcategory, ProjectType } from "@/types/database";
+import { ACCOUNTS } from "@/lib/accounts";
+import type { CategoryScope, ExpenseCategory, ExpenseSubcategory } from "@/types/database";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -23,7 +24,7 @@ export function ExpenseForm({
 }: {
   categories: ExpenseCategory[];
   subcategories: ExpenseSubcategory[];
-  projectType: ProjectType;
+  projectType: CategoryScope;
   onCategoriesChange: (categories: ExpenseCategory[]) => void;
   onSubmit: (values: ExpenseFormValues) => Promise<{ error?: string }>;
   defaultValues?: Partial<ExpenseFormInput>;
@@ -47,12 +48,17 @@ export function ExpenseForm({
       entry_mode: "total",
       expense_date: todayISO(),
       category_id: categories[0]?.id ?? "",
+      account: "ip_account",
+      bonus_enabled: false,
+      bonus_mode: "percent",
       ...defaultValues,
     },
   });
 
   const entryMode = watch("entry_mode");
   const categoryId = watch("category_id");
+  const bonusEnabled = watch("bonus_enabled");
+  const bonusMode = watch("bonus_mode");
   const subcategoryOptions = subcategories.filter((s) => s.category_id === categoryId);
 
   async function handleAddCategory() {
@@ -84,6 +90,11 @@ export function ExpenseForm({
       expense_date: todayISO(),
       category_id: values.category_id,
       subcategory_id: values.subcategory_id ?? "",
+      account: values.account,
+      bonus_enabled: false,
+      bonus_mode: "percent",
+      bonus_percent: undefined,
+      bonus_fixed_amount: undefined,
       material_name: "",
       quantity: undefined,
       unit: "",
@@ -157,6 +168,20 @@ export function ExpenseForm({
             {...register("expense_date")}
             className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
+        </div>
+
+        <div className="col-span-2 sm:col-span-1">
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Счёт</label>
+          <select
+            {...register("account")}
+            className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+          >
+            {ACCOUNTS.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -263,6 +288,70 @@ export function ExpenseForm({
       {errors.total_price && (
         <p className="text-sm text-red-600">{errors.total_price.message}</p>
       )}
+
+      <div className="rounded-xl border border-neutral-200 p-3">
+        <label className="flex items-center gap-2 text-sm font-medium text-neutral-700">
+          <input type="checkbox" {...register("bonus_enabled")} className="h-4 w-4 rounded" />
+          Бонус от поставщика (кэшбэк)
+        </label>
+
+        {bonusEnabled && (
+          <div className="mt-3 space-y-3">
+            <div className="flex items-center gap-2 text-sm">
+              <button
+                type="button"
+                onClick={() => setValue("bonus_mode", "percent")}
+                className={`rounded-full px-3 py-1 ${
+                  bonusMode === "percent"
+                    ? "bg-brand-700 text-white"
+                    : "bg-neutral-100 text-neutral-600"
+                }`}
+              >
+                % от суммы
+              </button>
+              <button
+                type="button"
+                onClick={() => setValue("bonus_mode", "fixed")}
+                className={`rounded-full px-3 py-1 ${
+                  bonusMode === "fixed"
+                    ? "bg-brand-700 text-white"
+                    : "bg-neutral-100 text-neutral-600"
+                }`}
+              >
+                Фикс. сумма
+              </button>
+            </div>
+            {bonusMode === "percent" ? (
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">
+                  Процент бонуса, %
+                </label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  placeholder="Например: 10"
+                  {...register("bonus_percent")}
+                  className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">
+                  Сумма бонуса, ₸
+                </label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  {...register("bonus_fixed_amount")}
+                  className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <details className="text-sm">
         <summary className="cursor-pointer text-neutral-500">Примечание (необязательно)</summary>

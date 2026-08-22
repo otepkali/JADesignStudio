@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const accountSchema = z.enum(["cash", "ip_account", "personal_account"]);
+
 const projectBaseFields = {
   name: z.string().min(1, "Укажите название объекта"),
   total_amount: z.coerce.number().positive("Сумма должна быть больше нуля"),
@@ -28,6 +30,7 @@ export type ProjectUpdateFormInput = z.input<typeof projectUpdateSchema>;
 export const paymentSchema = z.object({
   amount: z.coerce.number().positive("Сумма должна быть больше нуля"),
   payment_type: z.enum(["prepayment", "additional", "final"]),
+  account: accountSchema,
   paid_at: z.string().min(1),
   note: z.string().optional().or(z.literal("")),
 });
@@ -47,6 +50,11 @@ export const expenseSchema = z
     total_price: z.coerce.number().optional().nullable(),
     expense_date: z.string().min(1),
     note: z.string().optional().or(z.literal("")),
+    account: accountSchema.optional().or(z.literal("")),
+    bonus_enabled: z.boolean().optional(),
+    bonus_mode: z.enum(["percent", "fixed"]).optional(),
+    bonus_percent: z.coerce.number().optional().nullable(),
+    bonus_fixed_amount: z.coerce.number().optional().nullable(),
   })
   .refine(
     (data) =>
