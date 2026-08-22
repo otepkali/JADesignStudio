@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatDate, formatTenge, daysUntil } from "@/lib/format";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import type { ProjectWithTotals } from "@/lib/data";
 
 export function ProjectCard({ project, totals }: ProjectWithTotals) {
@@ -10,7 +11,7 @@ export function ProjectCard({ project, totals }: ProjectWithTotals) {
   return (
     <Link
       href={`/projects/${project.id}`}
-      className="block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200 transition hover:shadow-md hover:ring-brand-200"
+      className="block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200 transition duration-200 hover:-translate-y-0.5 hover:shadow-md hover:ring-brand-200"
     >
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -31,7 +32,7 @@ export function ProjectCard({ project, totals }: ProjectWithTotals) {
       <div className="mt-4">
         <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
           <div
-            className={`h-full rounded-full ${isOverBudget ? "bg-red-500" : "bg-brand-700"}`}
+            className={`animate-grow-bar h-full rounded-full ${isOverBudget ? "bg-red-500" : "bg-brand-700"}`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -45,7 +46,7 @@ export function ProjectCard({ project, totals }: ProjectWithTotals) {
         <div>
           <p className="text-xs text-neutral-500">Остаток</p>
           <p className={`text-2xl font-bold ${isOverBudget ? "text-red-600" : "text-neutral-900"}`}>
-            {formatTenge(totals.remaining)}
+            <AnimatedNumber value={totals.remaining} formatter={formatTenge} />
           </p>
         </div>
         {project.deadline && (
