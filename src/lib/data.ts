@@ -273,9 +273,11 @@ export async function getBusinessBalance(): Promise<BusinessBalance> {
     };
   });
 
-  const totalReceived = byAccount.reduce((s, a) => s + a.received, 0) + unassigned.received;
-  const totalSpent = byAccount.reduce((s, a) => s + a.spent, 0) + unassigned.spent;
-  const totalBonuses = byAccount.reduce((s, a) => s + a.bonuses, 0) + unassigned.bonuses;
+  // Only money tagged with a known account counts toward the headline
+  // total — untagged (legacy) activity is shown separately, not folded in.
+  const totalReceived = byAccount.reduce((s, a) => s + a.received, 0);
+  const totalSpent = byAccount.reduce((s, a) => s + a.spent, 0);
+  const totalBonuses = byAccount.reduce((s, a) => s + a.bonuses, 0);
 
   return {
     totalReceived,

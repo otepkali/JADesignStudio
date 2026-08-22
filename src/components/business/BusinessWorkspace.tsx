@@ -158,7 +158,7 @@ export function BusinessWorkspace({
         <div className="rounded-2xl bg-neutral-50 p-4 text-sm text-neutral-500 ring-1 ring-neutral-200">
           Без указания счёта: получено {formatTenge(balance.unassigned.received)}, потрачено{" "}
           {formatTenge(balance.unassigned.spent)}. Обычно это старые записи, внесённые до
-          добавления счетов.
+          добавления счетов — в сальдо выше не учитываются.
         </div>
       )}
 
