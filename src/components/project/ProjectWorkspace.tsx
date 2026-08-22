@@ -202,18 +202,20 @@ export function ProjectWorkspace({
         </div>
       </div>
 
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-        <h2 className="mb-3 text-base font-semibold text-neutral-900">
-          Плановая себестоимость и маржа
-        </h2>
-        <ProjectBudget
-          project={project}
-          categories={categories}
-          initialBudgetLines={initialBudgetLines}
-          expenses={expenses}
-          onSave={handleSaveBudget}
-        />
-      </div>
+      {project.project_type === "turnkey" && (
+        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
+          <h2 className="mb-3 text-base font-semibold text-neutral-900">
+            Плановая себестоимость и маржа
+          </h2>
+          <ProjectBudget
+            project={project}
+            categories={categories}
+            initialBudgetLines={initialBudgetLines}
+            expenses={expenses}
+            onSave={handleSaveBudget}
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
