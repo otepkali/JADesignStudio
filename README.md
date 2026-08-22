@@ -13,8 +13,9 @@ Next.js 14+ (App Router, TypeScript) · Supabase (Postgres + Auth) · Google She
 
 1. **Supabase**
    - Создайте проект на [supabase.com](https://supabase.com).
-   - Откройте SQL Editor и выполните файл [`supabase/schema.sql`](supabase/schema.sql) целиком — он создаёт таблицы, включает Row Level Security и настраивает автосоздание базовых статей расходов для нового пользователя.
-   - В Authentication → Users создайте одного пользователя (email + пароль) — это владелица бизнеса.
+   - Откройте SQL Editor и выполните файл [`supabase/schema.sql`](supabase/schema.sql) целиком — он создаёт таблицы, включает Row Level Security (общий доступ для всех авторизованных пользователей — это одна команда, а не мульти-тенантный сервис) и заполняет базовые статьи расходов.
+   - Если у вас уже был применён более ранний вариант схемы (с изоляцией данных по пользователю), выполните дополнительно [`supabase/migration_shared_workspace.sql`](supabase/migration_shared_workspace.sql) — он переключает RLS на общий доступ и убирает дублирующиеся категории, если те успели создаться у второго пользователя.
+   - В Authentication → Users создайте пользователей (email + пароль) — по одному на каждого, кто должен вводить данные (владелица бизнеса, сестра и т.д.). Все они видят и редактируют одни и те же проекты.
    - Возьмите `Project URL`, `anon public key` и `service_role key` из Project Settings → API.
 
 2. **Google Sheets**
@@ -44,7 +45,8 @@ Next.js 14+ (App Router, TypeScript) · Supabase (Postgres + Auth) · Google She
 
 ### Структура
 
-- `supabase/schema.sql` — схема БД, RLS-политики, триггер сидирования категорий расходов.
+- `supabase/schema.sql` — схема БД, RLS-политики (общий доступ для всех авторизованных пользователей), базовые категории расходов.
+- `supabase/migration_shared_workspace.sql` — миграция для БД, созданной по старой (per-user) версии схемы.
 - `src/lib/supabase/` — клиенты Supabase (browser/server/middleware).
 - `src/lib/googleSheets.ts` — запись строки расхода в Google Таблицу через сервисный аккаунт.
 - `src/app/(app)/` — защищённые авторизацией страницы: дашборд, страница проекта, аналитика.

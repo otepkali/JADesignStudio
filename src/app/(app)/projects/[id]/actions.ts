@@ -3,8 +3,48 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { appendExpenseRow } from "@/lib/googleSheets";
-import { expenseSchema, paymentSchema, type ExpenseFormValues, type PaymentFormValues } from "@/lib/schemas";
-import type { ExpenseCategory, ExpenseWithCategory, Payment } from "@/types/database";
+import {
+  expenseSchema,
+  paymentSchema,
+  projectUpdateSchema,
+  type ExpenseFormValues,
+  type PaymentFormValues,
+  type ProjectUpdateFormValues,
+} from "@/lib/schemas";
+import type { ExpenseCategory, ExpenseWithCategory, Payment, Project } from "@/types/database";
+
+export async function updateProject(
+  projectId: string,
+  values: ProjectUpdateFormValues
+): Promise<{ error: string } | { project: Project }> {
+  const parsed = projectUpdateSchema.safeParse(values);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Неверные данные" };
+  }
+  const { name, total_amount, deadline, prepayment_percent, status } = parsed.data;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .update({
+      name,
+      total_amount,
+      deadline: deadline || null,
+      prepayment_percent,
+      status,
+    })
+    .eq("id", projectId)
+    .select()
+    .single();
+
+  if (error || !data) {
+    return { error: error?.message ?? "Не удалось обновить проект" };
+  }
+
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/");
+  return { project: data };
+}
 
 export async function addPayment(
   projectId: string,

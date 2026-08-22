@@ -7,14 +7,22 @@ import { groupExpensesByCategory, groupExpensesByWeek } from "@/lib/analytics";
 import { ExpenseForm } from "@/components/project/ExpenseForm";
 import { ExpensesTable } from "@/components/project/ExpensesTable";
 import { PaymentModal } from "@/components/project/PaymentModal";
+import { EditProjectModal } from "@/components/project/EditProjectModal";
 import { CategoryPieChart } from "@/components/project/CategoryPieChart";
 import { WeeklyBarChart } from "@/components/project/WeeklyBarChart";
-import { addExpense, addPayment, deleteExpense, resyncExpense, updateExpense } from "@/app/(app)/projects/[id]/actions";
+import {
+  addExpense,
+  addPayment,
+  deleteExpense,
+  resyncExpense,
+  updateExpense,
+  updateProject,
+} from "@/app/(app)/projects/[id]/actions";
 import type { Project, ExpenseCategory, ExpenseWithCategory, Payment } from "@/types/database";
-import type { ExpenseFormValues, PaymentFormValues } from "@/lib/schemas";
+import type { ExpenseFormValues, PaymentFormValues, ProjectUpdateFormValues } from "@/lib/schemas";
 
 export function ProjectWorkspace({
-  project,
+  project: initialProject,
   initialPayments,
   initialExpenses,
   initialCategories,
@@ -24,10 +32,12 @@ export function ProjectWorkspace({
   initialExpenses: ExpenseWithCategory[];
   initialCategories: ExpenseCategory[];
 }) {
+  const [project, setProject] = useState(initialProject);
   const [payments, setPayments] = useState(initialPayments);
   const [expenses, setExpenses] = useState(initialExpenses);
   const [categories, setCategories] = useState(initialCategories);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [editProjectModalOpen, setEditProjectModalOpen] = useState(false);
   const [syncNotice, setSyncNotice] = useState<string | null>(null);
 
   const totals = useMemo(() => calculateProjectTotals(payments, expenses), [payments, expenses]);
@@ -88,6 +98,17 @@ export function ProjectWorkspace({
     }
   }
 
+  async function handleUpdateProject(values: ProjectUpdateFormValues) {
+    const result = await updateProject(project.id, values);
+    if ("error" in result && result.error) {
+      return { error: result.error };
+    }
+    if ("project" in result) {
+      setProject(result.project);
+    }
+    return {};
+  }
+
   async function handleAddPayment(values: PaymentFormValues) {
     const result = await addPayment(project.id, values);
     if ("error" in result && result.error) {
@@ -112,12 +133,20 @@ export function ProjectWorkspace({
               {project.status === "completed" ? "Завершён" : "В работе"}
             </p>
           </div>
-          <button
-            onClick={() => setPaymentModalOpen(true)}
-            className="shrink-0 rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-          >
-            + Добавить оплату
-          </button>
+          <div className="flex shrink-0 gap-2">
+            <button
+              onClick={() => setEditProjectModalOpen(true)}
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            >
+              Изменить
+            </button>
+            <button
+              onClick={() => setPaymentModalOpen(true)}
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            >
+              + Добавить оплату
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-3">
@@ -188,6 +217,13 @@ export function ProjectWorkspace({
         open={paymentModalOpen}
         onClose={() => setPaymentModalOpen(false)}
         onSubmit={handleAddPayment}
+      />
+
+      <EditProjectModal
+        open={editProjectModalOpen}
+        project={project}
+        onClose={() => setEditProjectModalOpen(false)}
+        onSubmit={handleUpdateProject}
       />
     </div>
   );

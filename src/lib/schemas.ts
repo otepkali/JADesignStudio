@@ -10,6 +10,13 @@ export const projectSchema = z.object({
 export type ProjectFormValues = z.output<typeof projectSchema>;
 export type ProjectFormInput = z.input<typeof projectSchema>;
 
+export const projectUpdateSchema = projectSchema.extend({
+  status: z.enum(["in_progress", "completed"]),
+});
+
+export type ProjectUpdateFormValues = z.output<typeof projectUpdateSchema>;
+export type ProjectUpdateFormInput = z.input<typeof projectUpdateSchema>;
+
 export const paymentSchema = z.object({
   amount: z.coerce.number().positive("Сумма должна быть больше нуля"),
   payment_type: z.enum(["prepayment", "additional", "final"]),
