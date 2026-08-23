@@ -18,7 +18,7 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Учёт себестоимости объектов",
+  title: "JA Design Studio",
   description: "Учёт расходов и оплат по ремонтным проектам",
 };
 
