@@ -11,6 +11,7 @@ import type {
   ExpenseSubcategory,
   ProjectBudgetLine,
   AccountId,
+  Task,
 } from "@/types/database";
 
 export interface ProjectWithTotals {
@@ -287,4 +288,20 @@ export async function getBusinessBalance(): Promise<BusinessBalance> {
     byAccount,
     unassigned,
   };
+}
+
+export async function getTasks(): Promise<Task[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("tasks").select("*");
+  const tasks = data ?? [];
+
+  return tasks.sort((a, b) => {
+    if ((a.status === "done") !== (b.status === "done")) {
+      return a.status === "done" ? 1 : -1;
+    }
+    if (!a.deadline && !b.deadline) return 0;
+    if (!a.deadline) return 1;
+    if (!b.deadline) return -1;
+    return a.deadline.localeCompare(b.deadline);
+  });
 }

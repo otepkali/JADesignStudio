@@ -81,3 +81,14 @@ export const budgetLinesSchema = z.object({
 
 export type BudgetLinesFormValues = z.output<typeof budgetLinesSchema>;
 export type BudgetLinesFormInput = z.input<typeof budgetLinesSchema>;
+
+export const taskSchema = z.object({
+  title: z.string().min(1, "Укажите задачу"),
+  assignee: z.string().optional().or(z.literal("")),
+  deadline: z.string().optional().or(z.literal("")),
+  status: z.enum(["todo", "in_progress", "done"]),
+  note: z.string().optional().or(z.literal("")),
+});
+
+export type TaskFormValues = z.output<typeof taskSchema>;
+export type TaskFormInput = z.input<typeof taskSchema>;

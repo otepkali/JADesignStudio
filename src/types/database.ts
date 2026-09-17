@@ -83,3 +83,16 @@ export interface ProjectBudgetLine {
 export interface ProjectBudgetLineWithCategory extends ProjectBudgetLine {
   expense_categories: ExpenseCategory | null;
 }
+
+export type TaskStatus = "todo" | "in_progress" | "done";
+
+export interface Task {
+  id: string;
+  user_id: string | null;
+  title: string;
+  assignee: string | null;
+  deadline: string | null;
+  status: TaskStatus;
+  note: string | null;
+  created_at: string;
+}

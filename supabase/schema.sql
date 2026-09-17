@@ -187,3 +187,27 @@ create policy "project_budget_lines_authenticated_all" on project_budget_lines
   for all
   using (auth.uid() is not null)
   with check (auth.uid() is not null);
+
+-- ---------------------------------------------------------------------------
+-- Tasks: shared day-to-day to-do list with an assignee and deadline.
+-- ---------------------------------------------------------------------------
+
+create table if not exists tasks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null default auth.uid(),
+  title text not null,
+  assignee text,
+  deadline date,
+  status text not null default 'todo' check (status in ('todo', 'in_progress', 'done')),
+  note text,
+  created_at timestamptz default now()
+);
+
+create index if not exists tasks_deadline_idx on tasks(deadline);
+
+alter table tasks enable row level security;
+
+create policy "tasks_authenticated_all" on tasks
+  for all
+  using (auth.uid() is not null)
+  with check (auth.uid() is not null);
