@@ -28,6 +28,7 @@ export async function addTask(
       assignee: v.assignee || null,
       deadline: v.deadline || null,
       status: v.status,
+      priority: v.priority,
       note: v.note || null,
     })
     .select()
@@ -59,6 +60,7 @@ export async function updateTask(
       assignee: v.assignee || null,
       deadline: v.deadline || null,
       status: v.status,
+      priority: v.priority,
       note: v.note || null,
     })
     .eq("id", taskId)

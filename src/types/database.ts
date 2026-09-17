@@ -85,6 +85,7 @@ export interface ProjectBudgetLineWithCategory extends ProjectBudgetLine {
 }
 
 export type TaskStatus = "todo" | "in_progress" | "done";
+export type TaskPriority = "low" | "medium" | "high";
 
 export interface Task {
   id: string;
@@ -93,6 +94,7 @@ export interface Task {
   assignee: string | null;
   deadline: string | null;
   status: TaskStatus;
+  priority: TaskPriority;
   note: string | null;
   created_at: string;
 }

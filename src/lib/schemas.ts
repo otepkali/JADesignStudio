@@ -87,6 +87,7 @@ export const taskSchema = z.object({
   assignee: z.string().optional().or(z.literal("")),
   deadline: z.string().optional().or(z.literal("")),
   status: z.enum(["todo", "in_progress", "done"]),
+  priority: z.enum(["low", "medium", "high"]),
   note: z.string().optional().or(z.literal("")),
 });
 

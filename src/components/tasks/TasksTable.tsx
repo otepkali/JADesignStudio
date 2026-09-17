@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { formatDate, daysUntil } from "@/lib/format";
 import { TaskForm } from "@/components/tasks/TaskForm";
-import type { Task, TaskStatus } from "@/types/database";
+import type { Task, TaskPriority, TaskStatus } from "@/types/database";
 import type { TaskFormValues } from "@/lib/schemas";
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
@@ -16,6 +16,24 @@ const STATUS_STYLES: Record<TaskStatus, string> = {
   todo: "bg-neutral-100 text-neutral-600",
   in_progress: "bg-amber-50 text-amber-700",
   done: "bg-emerald-50 text-emerald-700",
+};
+
+const PRIORITY_LABELS: Record<TaskPriority, string> = {
+  low: "Низкая",
+  medium: "Средняя",
+  high: "Высокая",
+};
+
+const PRIORITY_STYLES: Record<TaskPriority, string> = {
+  low: "text-neutral-400",
+  medium: "text-neutral-600",
+  high: "text-red-600 font-medium",
+};
+
+const PRIORITY_DOT: Record<TaskPriority, string> = {
+  low: "bg-neutral-300",
+  medium: "bg-amber-400",
+  high: "bg-red-500",
 };
 
 export function TasksTable({
@@ -44,6 +62,7 @@ export function TasksTable({
             <th className="pb-2 font-medium">Задача</th>
             <th className="pb-2 font-medium">Ответственный</th>
             <th className="pb-2 font-medium">Дедлайн</th>
+            <th className="pb-2 font-medium">Важность</th>
             <th className="pb-2 font-medium">Статус</th>
             <th className="pb-2 font-medium"></th>
           </tr>
@@ -53,7 +72,7 @@ export function TasksTable({
             if (editingTask?.id === task.id) {
               return (
                 <tr key={task.id}>
-                  <td colSpan={5} className="py-3">
+                  <td colSpan={6} className="py-3">
                     <div className="rounded-xl border border-neutral-300 bg-neutral-50 p-4">
                       <TaskForm
                         submitLabel="Сохранить"
@@ -63,6 +82,7 @@ export function TasksTable({
                           assignee: task.assignee ?? "",
                           deadline: task.deadline ?? "",
                           status: task.status,
+                          priority: task.priority,
                           note: task.note ?? "",
                         }}
                         onSubmit={(values) => onUpdate(task.id, values)}
@@ -91,6 +111,12 @@ export function TasksTable({
                 <td className="py-2 pr-2 text-neutral-700">{task.assignee || "—"}</td>
                 <td className={`py-2 pr-2 ${isOverdue ? "font-medium text-red-600" : "text-neutral-700"}`}>
                   {formatDate(task.deadline)}
+                </td>
+                <td className={`py-2 pr-2 ${PRIORITY_STYLES[task.priority]}`}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={`h-1.5 w-1.5 rounded-full ${PRIORITY_DOT[task.priority]}`} />
+                    {PRIORITY_LABELS[task.priority]}
+                  </span>
                 </td>
                 <td className="py-2 pr-2">
                   <select

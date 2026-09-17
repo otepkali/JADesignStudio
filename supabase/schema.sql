@@ -199,6 +199,7 @@ create table if not exists tasks (
   assignee text,
   deadline date,
   status text not null default 'todo' check (status in ('todo', 'in_progress', 'done')),
+  priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
   note text,
   created_at timestamptz default now()
 );

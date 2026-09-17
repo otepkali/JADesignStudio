@@ -26,6 +26,7 @@ export function TaskForm({
     resolver: zodResolver(taskSchema),
     defaultValues: {
       status: "todo",
+      priority: "medium",
       ...defaultValues,
     },
   });
@@ -41,7 +42,7 @@ export function TaskForm({
       onCancel();
       return;
     }
-    reset({ title: "", assignee: "", deadline: "", status: "todo", note: "" });
+    reset({ title: "", assignee: "", deadline: "", status: "todo", priority: "medium", note: "" });
   }
 
   return (
@@ -75,16 +76,29 @@ export function TaskForm({
         </div>
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium text-neutral-700">Статус</label>
-        <select
-          {...register("status")}
-          className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
-        >
-          <option value="todo">Не начато</option>
-          <option value="in_progress">В процессе</option>
-          <option value="done">Готово</option>
-        </select>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Статус</label>
+          <select
+            {...register("status")}
+            className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+          >
+            <option value="todo">Не начато</option>
+            <option value="in_progress">В процессе</option>
+            <option value="done">Готово</option>
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Важность</label>
+          <select
+            {...register("priority")}
+            className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+          >
+            <option value="low">Низкая</option>
+            <option value="medium">Средняя</option>
+            <option value="high">Высокая</option>
+          </select>
+        </div>
       </div>
 
       <details className="text-sm">

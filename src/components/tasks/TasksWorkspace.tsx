@@ -1,23 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { TasksTable } from "@/components/tasks/TasksTable";
 import { addTask, deleteTask, setTaskStatus, updateTask } from "@/app/(app)/tasks/actions";
+import { sortTasks } from "@/lib/tasks";
 import type { Task, TaskStatus } from "@/types/database";
 import type { TaskFormValues } from "@/lib/schemas";
-
-function sortTasks(tasks: Task[]): Task[] {
-  return [...tasks].sort((a, b) => {
-    if ((a.status === "done") !== (b.status === "done")) {
-      return a.status === "done" ? 1 : -1;
-    }
-    if (!a.deadline && !b.deadline) return 0;
-    if (!a.deadline) return 1;
-    if (!b.deadline) return -1;
-    return a.deadline.localeCompare(b.deadline);
-  });
-}
 
 export function TasksWorkspace({ initialTasks }: { initialTasks: Task[] }) {
   const [tasks, setTasks] = useState(initialTasks);
@@ -75,6 +65,16 @@ export function TasksWorkspace({ initialTasks }: { initialTasks: Task[] }) {
         <p className="text-sm text-neutral-500">
           Общий список ежедневных задач: что нужно сделать, кто отвечает и к какому сроку.
         </p>
+      </div>
+
+      <div className="flex gap-2 text-sm">
+        <span className="rounded-xl bg-brand-700 px-3 py-1.5 font-medium text-white">Список</span>
+        <Link
+          href="/tasks/calendar"
+          className="rounded-xl border border-neutral-300 px-3 py-1.5 text-neutral-600 transition hover:border-brand-300 hover:bg-brand-50"
+        >
+          Календарь
+        </Link>
       </div>
 
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
