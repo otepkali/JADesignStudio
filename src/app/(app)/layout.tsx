@@ -1,7 +1,6 @@
-import Link from "next/link";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Header } from "@/components/layout/Header";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -15,42 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <header className="sticky top-0 z-10 border-b border-brand-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link href="/" className="shrink-0">
-            <Image
-              src="/logo.png"
-              alt="Janerke Abat Design"
-              width={486}
-              height={92}
-              priority
-              className="h-8 w-auto sm:h-9"
-            />
-          </Link>
-          <nav className="flex items-center gap-4 text-sm">
-            <Link href="/" className="text-neutral-600 hover:text-brand-700">
-              Дашборд
-            </Link>
-            <Link href="/analytics" className="text-neutral-600 hover:text-brand-700">
-              Аналитика
-            </Link>
-            <Link href="/business" className="text-neutral-600 hover:text-brand-700">
-              Бизнес
-            </Link>
-            <Link href="/tasks" className="text-neutral-600 hover:text-brand-700">
-              Задачи
-            </Link>
-            <form action="/auth/signout" method="post">
-              <button
-                type="submit"
-                className="text-neutral-400 transition hover:text-brand-700"
-              >
-                Выйти
-              </button>
-            </form>
-          </nav>
-        </div>
-      </header>
+      <Header />
       <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
     </div>
   );
