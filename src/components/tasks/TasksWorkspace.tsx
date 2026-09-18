@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { TaskForm } from "@/components/tasks/TaskForm";
+import { AddTaskModal } from "@/components/tasks/AddTaskModal";
 import { TasksTable } from "@/components/tasks/TasksTable";
 import { addTask, deleteTask, setTaskStatus, updateTask } from "@/app/(app)/tasks/actions";
 import { sortTasks } from "@/lib/tasks";
@@ -12,6 +12,7 @@ import type { TaskFormValues } from "@/lib/schemas";
 export function TasksWorkspace({ initialTasks }: { initialTasks: Task[] }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [filter, setFilter] = useState<"all" | TaskStatus>("all");
+  const [addOpen, setAddOpen] = useState(false);
 
   const filtered = useMemo(
     () => (filter === "all" ? tasks : tasks.filter((t) => t.status === filter)),
@@ -60,11 +61,19 @@ export function TasksWorkspace({ initialTasks }: { initialTasks: Task[] }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-neutral-900">Задачи</h1>
-        <p className="text-sm text-neutral-500">
-          Общий список ежедневных задач: что нужно сделать, кто отвечает и к какому сроку.
-        </p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-semibold text-neutral-900">Задачи</h1>
+          <p className="text-sm text-neutral-500">
+            Общий список ежедневных задач: что нужно сделать, кто отвечает и к какому сроку.
+          </p>
+        </div>
+        <button
+          onClick={() => setAddOpen(true)}
+          className="shrink-0 rounded-xl bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
+        >
+          + Добавить задачу
+        </button>
       </div>
 
       <div className="flex gap-2 text-sm">
@@ -75,11 +84,6 @@ export function TasksWorkspace({ initialTasks }: { initialTasks: Task[] }) {
         >
           Календарь
         </Link>
-      </div>
-
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
-        <h2 className="mb-3 text-base font-semibold text-neutral-900">Добавить задачу</h2>
-        <TaskForm onSubmit={handleAdd} />
       </div>
 
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
@@ -103,6 +107,8 @@ export function TasksWorkspace({ initialTasks }: { initialTasks: Task[] }) {
           onDelete={handleDelete}
         />
       </div>
+
+      <AddTaskModal open={addOpen} onClose={() => setAddOpen(false)} onSubmit={handleAdd} />
     </div>
   );
 }
