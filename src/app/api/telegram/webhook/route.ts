@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     if (text.startsWith("/start")) {
       await sendPlainMessage(
         chatId,
-        "Привет! Напишите сюда своё имя точно так, как оно указано в приложении (раздел «Сотрудники»), и я подключу уведомления о задачах."
+        "Привет! Напишите сюда своё имя — я подключу уведомления о задачах на это имя."
       );
       return NextResponse.json({ ok: true });
     }
@@ -84,10 +84,26 @@ export async function POST(request: Request) {
         chatId,
         `Готово, ${match.name}! Теперь сюда будут приходить ваши задачи.`
       );
+      return NextResponse.json({ ok: true });
+    }
+
+    // No existing (unlinked) team member with this name — register them
+    // automatically instead of requiring an admin to add them first.
+    const { data: created, error: createError } = await supabase
+      .from("team_members")
+      .insert({ name: text, telegram_chat_id: chatId })
+      .select("id, name")
+      .single();
+
+    if (createError || !created) {
+      await sendPlainMessage(
+        chatId,
+        `Не удалось подключить как «${text}» — похоже, это имя уже занято. Напишите имя с фамилией.`
+      );
     } else {
       await sendPlainMessage(
         chatId,
-        `Не нашёл сотрудника с именем «${text}». Попросите добавить это имя в приложении (раздел «Сотрудники»), затем напишите его сюда ещё раз.`
+        `Добро пожаловать, ${created.name}! Вы добавлены в сотрудники, теперь будете получать задачи и напоминания сюда.`
       );
     }
   }
