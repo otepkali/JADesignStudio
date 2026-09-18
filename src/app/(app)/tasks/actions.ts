@@ -2,8 +2,41 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { sendTaskNotification } from "@/lib/telegram";
 import { taskSchema, type TaskFormValues } from "@/lib/schemas";
 import type { Task } from "@/types/database";
+
+async function resolveAssignee(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  assigneeId: string | undefined
+): Promise<{ assignee: string | null; assignee_id: string | null; chatId: string | null }> {
+  if (!assigneeId) return { assignee: null, assignee_id: null, chatId: null };
+
+  const { data: member } = await supabase
+    .from("team_members")
+    .select("id, name, telegram_chat_id")
+    .eq("id", assigneeId)
+    .single();
+
+  if (!member) return { assignee: null, assignee_id: null, chatId: null };
+
+  return { assignee: member.name, assignee_id: member.id, chatId: member.telegram_chat_id };
+}
+
+async function notifyAssignee(task: Task, chatId: string | null) {
+  if (!chatId) return;
+  try {
+    await sendTaskNotification({
+      taskId: task.id,
+      chatId,
+      title: task.title,
+      deadline: task.deadline,
+      priority: task.priority,
+    });
+  } catch (err) {
+    console.error("Telegram notify failed", err);
+  }
+}
 
 export async function addTask(
   values: TaskFormValues
@@ -20,12 +53,15 @@ export async function addTask(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Не авторизовано" };
 
+  const { assignee, assignee_id, chatId } = await resolveAssignee(supabase, v.assignee_id);
+
   const { data, error } = await supabase
     .from("tasks")
     .insert({
       user_id: user.id,
       title: v.title,
-      assignee: v.assignee || null,
+      assignee,
+      assignee_id,
       deadline: v.deadline || null,
       status: v.status,
       priority: v.priority,
@@ -36,6 +72,10 @@ export async function addTask(
 
   if (error || !data) {
     return { error: error?.message ?? "Не удалось создать задачу" };
+  }
+
+  if (v.status !== "done") {
+    await notifyAssignee(data, chatId);
   }
 
   revalidatePath("/tasks");
@@ -53,11 +93,14 @@ export async function updateTask(
   const v = parsed.data;
 
   const supabase = await createClient();
+  const { assignee, assignee_id } = await resolveAssignee(supabase, v.assignee_id);
+
   const { data, error } = await supabase
     .from("tasks")
     .update({
       title: v.title,
-      assignee: v.assignee || null,
+      assignee,
+      assignee_id,
       deadline: v.deadline || null,
       status: v.status,
       priority: v.priority,

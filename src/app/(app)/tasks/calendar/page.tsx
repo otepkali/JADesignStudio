@@ -24,6 +24,12 @@ export default async function TasksCalendarPage() {
         <span className="rounded-xl bg-brand-700 px-3 py-1.5 font-medium text-white">
           Календарь
         </span>
+        <Link
+          href="/team"
+          className="rounded-xl border border-neutral-300 px-3 py-1.5 text-neutral-600 transition hover:border-brand-300 hover:bg-brand-50"
+        >
+          Сотрудники
+        </Link>
       </div>
 
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">

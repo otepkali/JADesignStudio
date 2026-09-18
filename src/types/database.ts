@@ -87,14 +87,23 @@ export interface ProjectBudgetLineWithCategory extends ProjectBudgetLine {
 export type TaskStatus = "todo" | "in_progress" | "done";
 export type TaskPriority = "low" | "medium" | "high";
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  telegram_chat_id: string | null;
+  created_at: string;
+}
+
 export interface Task {
   id: string;
   user_id: string | null;
   title: string;
   assignee: string | null;
+  assignee_id: string | null;
   deadline: string | null;
   status: TaskStatus;
   priority: TaskPriority;
+  last_reminded_on: string | null;
   note: string | null;
   created_at: string;
 }

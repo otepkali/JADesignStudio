@@ -2,13 +2,16 @@
 
 import { TaskForm } from "@/components/tasks/TaskForm";
 import type { TaskFormValues } from "@/lib/schemas";
+import type { TeamMember } from "@/types/database";
 
 export function AddTaskModal({
   open,
+  teamMembers,
   onClose,
   onSubmit,
 }: {
   open: boolean;
+  teamMembers: TeamMember[];
   onClose: () => void;
   onSubmit: (values: TaskFormValues) => Promise<{ error?: string }>;
 }) {
@@ -23,7 +26,12 @@ export function AddTaskModal({
             ×
           </button>
         </div>
-        <TaskForm submitLabel="Добавить задачу" onCancel={onClose} onSubmit={onSubmit} />
+        <TaskForm
+          teamMembers={teamMembers}
+          submitLabel="Добавить задачу"
+          onCancel={onClose}
+          onSubmit={onSubmit}
+        />
       </div>
     </div>
   );

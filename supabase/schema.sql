@@ -192,23 +192,44 @@ create policy "project_budget_lines_authenticated_all" on project_budget_lines
 -- Tasks: shared day-to-day to-do list with an assignee and deadline.
 -- ---------------------------------------------------------------------------
 
+-- Team members: who tasks can be assigned to, and their linked Telegram
+-- chat (set once they message the bot and it matches their name).
+create table if not exists team_members (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  telegram_chat_id text,
+  created_at timestamptz default now()
+);
+
+create unique index if not exists team_members_name_unique on team_members (name);
+
 create table if not exists tasks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null default auth.uid(),
   title text not null,
   assignee text,
+  assignee_id uuid references team_members(id) on delete set null,
   deadline date,
   status text not null default 'todo' check (status in ('todo', 'in_progress', 'done')),
   priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
   note text,
+  -- date of the last Telegram reminder sent for this task (one per day).
+  last_reminded_on date,
   created_at timestamptz default now()
 );
 
 create index if not exists tasks_deadline_idx on tasks(deadline);
+create index if not exists tasks_assignee_id_idx on tasks(assignee_id);
 
 alter table tasks enable row level security;
+alter table team_members enable row level security;
 
 create policy "tasks_authenticated_all" on tasks
+  for all
+  using (auth.uid() is not null)
+  with check (auth.uid() is not null);
+
+create policy "team_members_authenticated_all" on team_members
   for all
   using (auth.uid() is not null)
   with check (auth.uid() is not null);

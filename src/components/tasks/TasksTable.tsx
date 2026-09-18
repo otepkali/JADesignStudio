@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { formatDate, daysUntil } from "@/lib/format";
 import { TaskForm } from "@/components/tasks/TaskForm";
-import type { Task, TaskPriority, TaskStatus } from "@/types/database";
+import type { Task, TaskPriority, TaskStatus, TeamMember } from "@/types/database";
 import type { TaskFormValues } from "@/lib/schemas";
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
@@ -38,11 +38,13 @@ const PRIORITY_DOT: Record<TaskPriority, string> = {
 
 export function TasksTable({
   tasks,
+  teamMembers,
   onUpdate,
   onSetStatus,
   onDelete,
 }: {
   tasks: Task[];
+  teamMembers: TeamMember[];
   onUpdate: (taskId: string, values: TaskFormValues) => Promise<{ error?: string }>;
   onSetStatus: (taskId: string, status: TaskStatus) => Promise<void>;
   onDelete: (taskId: string) => Promise<void>;
@@ -75,11 +77,12 @@ export function TasksTable({
                   <td colSpan={6} className="py-3">
                     <div className="rounded-xl border border-neutral-300 bg-neutral-50 p-4">
                       <TaskForm
+                        teamMembers={teamMembers}
                         submitLabel="Сохранить"
                         onCancel={() => setEditingId(null)}
                         defaultValues={{
                           title: task.title,
-                          assignee: task.assignee ?? "",
+                          assignee_id: task.assignee_id ?? "",
                           deadline: task.deadline ?? "",
                           status: task.status,
                           priority: task.priority,

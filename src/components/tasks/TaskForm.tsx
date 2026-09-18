@@ -1,16 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { taskSchema, type TaskFormInput, type TaskFormValues } from "@/lib/schemas";
+import type { TeamMember } from "@/types/database";
 
 export function TaskForm({
+  teamMembers,
   onSubmit: onSubmitValues,
   defaultValues,
   submitLabel = "Добавить задачу",
   onCancel,
 }: {
+  teamMembers: TeamMember[];
   onSubmit: (values: TaskFormValues) => Promise<{ error?: string }>;
   defaultValues?: Partial<TaskFormInput>;
   submitLabel?: string;
@@ -27,6 +31,7 @@ export function TaskForm({
     defaultValues: {
       status: "todo",
       priority: "medium",
+      assignee_id: "",
       ...defaultValues,
     },
   });
@@ -42,7 +47,7 @@ export function TaskForm({
       onCancel();
       return;
     }
-    reset({ title: "", assignee: "", deadline: "", status: "todo", priority: "medium", note: "" });
+    reset({ title: "", assignee_id: "", deadline: "", status: "todo", priority: "medium", note: "" });
   }
 
   return (
@@ -60,11 +65,26 @@ export function TaskForm({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="mb-1 block text-sm font-medium text-neutral-700">Ответственный</label>
-          <input
-            {...register("assignee")}
-            placeholder="Имя"
+          <select
+            {...register("assignee_id")}
             className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
-          />
+          >
+            <option value="">— не назначен —</option>
+            {teamMembers.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+                {!m.telegram_chat_id ? " (без Telegram)" : ""}
+              </option>
+            ))}
+          </select>
+          {teamMembers.length === 0 && (
+            <p className="mt-1 text-xs text-neutral-400">
+              Нет сотрудников.{" "}
+              <Link href="/team" className="text-brand-700 underline">
+                Добавить
+              </Link>
+            </p>
+          )}
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-neutral-700">Дедлайн</label>

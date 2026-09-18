@@ -13,6 +13,7 @@ import type {
   ProjectBudgetLine,
   AccountId,
   Task,
+  TeamMember,
 } from "@/types/database";
 
 export interface ProjectWithTotals {
@@ -295,4 +296,10 @@ export async function getTasks(): Promise<Task[]> {
   const supabase = await createClient();
   const { data } = await supabase.from("tasks").select("*");
   return sortTasks(data ?? []);
+}
+
+export async function getTeamMembers(): Promise<TeamMember[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("team_members").select("*").order("name");
+  return data ?? [];
 }

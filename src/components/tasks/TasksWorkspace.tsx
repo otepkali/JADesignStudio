@@ -6,10 +6,16 @@ import { AddTaskModal } from "@/components/tasks/AddTaskModal";
 import { TasksTable } from "@/components/tasks/TasksTable";
 import { addTask, deleteTask, setTaskStatus, updateTask } from "@/app/(app)/tasks/actions";
 import { sortTasks } from "@/lib/tasks";
-import type { Task, TaskStatus } from "@/types/database";
+import type { Task, TaskStatus, TeamMember } from "@/types/database";
 import type { TaskFormValues } from "@/lib/schemas";
 
-export function TasksWorkspace({ initialTasks }: { initialTasks: Task[] }) {
+export function TasksWorkspace({
+  initialTasks,
+  teamMembers,
+}: {
+  initialTasks: Task[];
+  teamMembers: TeamMember[];
+}) {
   const [tasks, setTasks] = useState(initialTasks);
   const [filter, setFilter] = useState<"all" | TaskStatus>("all");
   const [addOpen, setAddOpen] = useState(false);
@@ -84,6 +90,12 @@ export function TasksWorkspace({ initialTasks }: { initialTasks: Task[] }) {
         >
           Календарь
         </Link>
+        <Link
+          href="/team"
+          className="rounded-xl border border-neutral-300 px-3 py-1.5 text-neutral-600 transition hover:border-brand-300 hover:bg-brand-50"
+        >
+          Сотрудники
+        </Link>
       </div>
 
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
@@ -102,13 +114,19 @@ export function TasksWorkspace({ initialTasks }: { initialTasks: Task[] }) {
         </div>
         <TasksTable
           tasks={filtered}
+          teamMembers={teamMembers}
           onUpdate={handleUpdate}
           onSetStatus={handleSetStatus}
           onDelete={handleDelete}
         />
       </div>
 
-      <AddTaskModal open={addOpen} onClose={() => setAddOpen(false)} onSubmit={handleAdd} />
+      <AddTaskModal
+        open={addOpen}
+        teamMembers={teamMembers}
+        onClose={() => setAddOpen(false)}
+        onSubmit={handleAdd}
+      />
     </div>
   );
 }
