@@ -233,3 +233,62 @@ create policy "team_members_authenticated_all" on team_members
   for all
   using (auth.uid() is not null)
   with check (auth.uid() is not null);
+
+-- ---------------------------------------------------------------------------
+-- Shop: hardware catalog, warehouse and sales tracking (see migration_9_shop.sql
+-- for the full seed data and the up-to-date, individually re-runnable version).
+-- ---------------------------------------------------------------------------
+
+create table if not exists products (
+  id uuid primary key default gen_random_uuid(),
+  sku text not null,
+  name text not null,
+  product_group text not null,
+  size text not null,
+  category text not null check (category in ('Ассортимент', 'Под заказ')),
+  image text not null,
+  cost_price_kzt numeric not null,
+  list_price_kzt numeric not null,
+  margin_amount_kzt numeric not null,
+  margin_percent numeric not null,
+  stock_qty integer not null default 0,
+  available_on_order boolean not null default false,
+  created_at timestamptz default now()
+);
+
+create unique index if not exists products_sku_unique on products (sku);
+
+create table if not exists sales (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid references products(id) on delete set null,
+  user_id uuid references auth.users(id) on delete set null default auth.uid(),
+  quantity integer not null,
+  unit_price_kzt numeric not null,
+  cost_price_kzt numeric not null,
+  full_margin_amount_kzt numeric not null,
+  actual_margin_kzt numeric not null,
+  margin_diff_kzt numeric not null,
+  sold_at date not null default current_date,
+  created_at timestamptz default now()
+);
+
+create index if not exists sales_product_id_idx on sales(product_id);
+create index if not exists sales_sold_at_idx on sales(sold_at);
+
+alter table products enable row level security;
+alter table sales enable row level security;
+
+create policy "products_public_read" on products
+  for select using (true);
+
+create policy "products_authenticated_write" on products
+  for insert with check (auth.uid() is not null);
+
+create policy "products_authenticated_update" on products
+  for update using (auth.uid() is not null) with check (auth.uid() is not null);
+
+create policy "products_authenticated_delete" on products
+  for delete using (auth.uid() is not null);
+
+create policy "sales_authenticated_all" on sales
+  for all using (auth.uid() is not null) with check (auth.uid() is not null);

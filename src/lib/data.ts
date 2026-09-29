@@ -14,6 +14,8 @@ import type {
   AccountId,
   Task,
   TeamMember,
+  Product,
+  SaleWithProduct,
 } from "@/types/database";
 
 export interface ProjectWithTotals {
@@ -302,4 +304,37 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
   const supabase = await createClient();
   const { data } = await supabase.from("team_members").select("*").order("name");
   return data ?? [];
+}
+
+export async function getProducts(): Promise<Product[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("products").select("*").order("name");
+  return data ?? [];
+}
+
+export async function getSales(): Promise<SaleWithProduct[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("sales")
+    .select("*, products(*)")
+    .order("sold_at", { ascending: false })
+    .order("created_at", { ascending: false });
+  return (data ?? []) as unknown as SaleWithProduct[];
+}
+
+export interface SalesSummary {
+  totalRevenue: number;
+  totalActualMargin: number;
+  totalLostMargin: number;
+}
+
+export function summarizeSales(sales: SaleWithProduct[]): SalesSummary {
+  return sales.reduce(
+    (acc, s) => ({
+      totalRevenue: acc.totalRevenue + s.unit_price_kzt * s.quantity,
+      totalActualMargin: acc.totalActualMargin + s.actual_margin_kzt * s.quantity,
+      totalLostMargin: acc.totalLostMargin + s.margin_diff_kzt * s.quantity,
+    }),
+    { totalRevenue: 0, totalActualMargin: 0, totalLostMargin: 0 }
+  );
 }

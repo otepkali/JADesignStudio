@@ -107,3 +107,40 @@ export interface Task {
   note: string | null;
   created_at: string;
 }
+
+export type ProductCategory = "Ассортимент" | "Под заказ";
+
+export interface Product {
+  id: string;
+  sku: string;
+  name: string;
+  product_group: string;
+  size: string;
+  category: ProductCategory;
+  image: string;
+  cost_price_kzt: number;
+  list_price_kzt: number;
+  margin_amount_kzt: number;
+  margin_percent: number;
+  stock_qty: number;
+  available_on_order: boolean;
+  created_at: string;
+}
+
+export interface Sale {
+  id: string;
+  product_id: string | null;
+  user_id: string | null;
+  quantity: number;
+  unit_price_kzt: number;
+  cost_price_kzt: number;
+  full_margin_amount_kzt: number;
+  actual_margin_kzt: number;
+  margin_diff_kzt: number;
+  sold_at: string;
+  created_at: string;
+}
+
+export interface SaleWithProduct extends Sale {
+  products: Product | null;
+}

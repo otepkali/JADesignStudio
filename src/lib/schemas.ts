@@ -100,3 +100,12 @@ export const teamMemberSchema = z.object({
 
 export type TeamMemberFormValues = z.output<typeof teamMemberSchema>;
 export type TeamMemberFormInput = z.input<typeof teamMemberSchema>;
+
+export const saleSchema = z.object({
+  quantity: z.coerce.number().int().positive("Количество должно быть больше нуля"),
+  unit_price_kzt: z.coerce.number().positive("Цена должна быть больше нуля"),
+  sold_at: z.string().min(1),
+});
+
+export type SaleFormValues = z.output<typeof saleSchema>;
+export type SaleFormInput = z.input<typeof saleSchema>;

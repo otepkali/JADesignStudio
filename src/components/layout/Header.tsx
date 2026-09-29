@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: "/analytics", label: "Аналитика" },
   { href: "/business", label: "Бизнес" },
   { href: "/tasks", label: "Задачи" },
+  { href: "/shop", label: "Магазин" },
 ];
 
 export function Header() {
