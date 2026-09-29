@@ -3,13 +3,32 @@
 import { useState } from "react";
 import Image from "next/image";
 import { formatTenge } from "@/lib/format";
+import { useCart } from "@/components/shop/CartContext";
 import type { ProductGroup } from "@/lib/shop";
 
 export function CatalogProductCard({ group }: { group: ProductGroup }) {
+  const { addItem } = useCart();
   const [selectedId, setSelectedId] = useState(group.items[0].id);
   const [open, setOpen] = useState(false);
+  const [qty, setQty] = useState(1);
+  const [added, setAdded] = useState(false);
   const selected = group.items.find((p) => p.id === selectedId) ?? group.items[0];
   const hasSizes = group.items.length > 1;
+
+  function handleAdd() {
+    addItem(
+      {
+        productId: selected.id,
+        sku: selected.sku,
+        group: group.key,
+        size: selected.size,
+        unitPrice: selected.list_price_kzt,
+      },
+      qty
+    );
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+  }
 
   return (
     <>
@@ -53,6 +72,14 @@ export function CatalogProductCard({ group }: { group: ProductGroup }) {
               <span className="text-xs text-neutral-400">{selected.stock_qty} шт.</span>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="mt-2 w-full rounded-lg bg-brand-700 px-2 py-1.5 text-xs font-medium text-white transition hover:bg-brand-800"
+          >
+            {added ? "Добавлено ✓" : "В корзину"}
+          </button>
         </div>
       </div>
 
@@ -128,6 +155,23 @@ export function CatalogProductCard({ group }: { group: ProductGroup }) {
                       В наличии · {selected.stock_qty} шт.
                     </span>
                   )}
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <input
+                    type="number"
+                    min={1}
+                    value={qty}
+                    onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
+                    className="w-16 rounded-lg border border-neutral-300 px-2 py-2 text-center text-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAdd}
+                    className="flex-1 rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
+                  >
+                    {added ? "Добавлено ✓" : "В корзину"}
+                  </button>
                 </div>
               </div>
             </div>
