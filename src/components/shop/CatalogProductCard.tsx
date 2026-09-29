@@ -75,12 +75,12 @@ export function CatalogProductCard({ group }: { group: ProductGroup }) {
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2">
-              <div className="relative aspect-square bg-neutral-100">
+              <div className="relative h-64 bg-neutral-100 sm:h-full sm:min-h-[320px]">
                 <Image
                   src={`/products/${group.image}`}
                   alt={group.key}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                 />
               </div>
               <div className="space-y-3 p-4">
