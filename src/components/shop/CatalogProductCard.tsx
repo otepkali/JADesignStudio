@@ -10,6 +10,7 @@ export function CatalogProductCard({ group }: { group: ProductGroup }) {
   const { addItem } = useCart();
   const [selectedId, setSelectedId] = useState(group.items[0].id);
   const [open, setOpen] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const selected = group.items.find((p) => p.id === selectedId) ?? group.items[0];
@@ -36,9 +37,14 @@ export function CatalogProductCard({ group }: { group: ProductGroup }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="relative block aspect-square w-full bg-neutral-100"
+          className="group relative block aspect-square w-full cursor-zoom-in overflow-hidden bg-neutral-100"
         >
-          <Image src={`/products/${group.image}`} alt={group.key} fill className="object-cover" />
+          <Image
+            src={`/products/${group.image}`}
+            alt={group.key}
+            fill
+            className="object-contain transition-transform duration-300 group-hover:scale-125"
+          />
         </button>
         <div className="p-3">
           <p className="text-sm font-medium text-neutral-900">{group.key}</p>
@@ -86,7 +92,10 @@ export function CatalogProductCard({ group }: { group: ProductGroup }) {
       {open && (
         <div
           className="fixed inset-0 z-20 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            setZoomed(false);
+          }}
         >
           <div
             className="w-full max-w-lg overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl"
@@ -95,19 +104,29 @@ export function CatalogProductCard({ group }: { group: ProductGroup }) {
             <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
               <h2 className="text-base font-semibold text-neutral-900">{group.key}</h2>
               <button
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false);
+                  setZoomed(false);
+                }}
                 className="text-neutral-400 hover:text-neutral-700"
               >
                 ×
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2">
-              <div className="relative h-64 bg-neutral-100 sm:h-full sm:min-h-[320px]">
+              <div
+                className={`relative h-64 bg-neutral-100 sm:h-full sm:min-h-[320px] ${
+                  zoomed ? "cursor-zoom-out overflow-auto" : "cursor-zoom-in overflow-hidden"
+                }`}
+                onClick={() => setZoomed((z) => !z)}
+              >
                 <Image
                   src={`/products/${group.image}`}
                   alt={group.key}
                   fill
-                  className="object-contain"
+                  className={`object-contain transition-transform duration-300 ${
+                    zoomed ? "scale-[2.2]" : "scale-100"
+                  }`}
                 />
               </div>
               <div className="space-y-3 p-4">
