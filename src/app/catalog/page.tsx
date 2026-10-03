@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { getProducts } from "@/lib/data";
 import { groupProducts, type ProductGroup } from "@/lib/shop";
 import { CatalogProductCard } from "@/components/shop/CatalogProductCard";
@@ -34,11 +35,19 @@ export default async function CatalogPage() {
         </header>
 
         <main className="mx-auto max-w-5xl space-y-10 px-4 py-8 pb-24">
-          <div>
-            <h1 className="text-2xl font-semibold text-neutral-900">Магазин фурнитуры</h1>
-            <p className="mt-1 text-sm text-neutral-500">
-              Фурнитура для гардеробных: штанги, полки, корзины, ручки и двери.
-            </p>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold text-neutral-900">Магазин фурнитуры</h1>
+              <p className="mt-1 text-sm text-neutral-500">
+                Фурнитура для гардеробных: штанги, полки, корзины, ручки и двери.
+              </p>
+            </div>
+            <Link
+              href="/catalog/builder"
+              className="shrink-0 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-800"
+            >
+              Собрать гардеробную в 3D →
+            </Link>
           </div>
 
           <ProductSection title="Ассортимент" subtitle="В наличии" groups={inStock} />
