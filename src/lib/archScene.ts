@@ -1,24 +1,13 @@
-// Decorative 3D background for the login page — a wine/cream arch scene
-// rendered with three.js (loaded from the CDN, matching the original r128
-// API the scene was authored against). Untyped on purpose: THREE comes from
-// a global script tag, not an npm/type-checked import.
+// Decorative 3D background — a wine/cream arch scene rendered with three.js
+// (loaded from the CDN, matching the original r128 API the scene was
+// authored against). Untyped on purpose: THREE comes from a global script
+// tag, not an npm/type-checked import. Shared by the login page and the
+// dashboard, each mounting it on their own <canvas>.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export function initLoginScene(): void {
-  if (typeof window === "undefined") return;
-
-  const w = window as any;
-  // Guard against double-init if the login page remounts (dev fast refresh,
-  // the onLoad callback firing again, etc.) — the canvas can only host one
-  // WebGLRenderer at a time.
-  if (w.__jaLoginSceneInitialized) return;
-  w.__jaLoginSceneInitialized = true;
-
-  const THREE = w.THREE;
-  if (!THREE) return;
-
-  const canvas = document.getElementById("gl") as HTMLCanvasElement | null;
-  if (!canvas) return;
+export function initArchScene(canvas: HTMLCanvasElement): () => void {
+  const THREE = (window as any).THREE;
+  if (!THREE) return () => {};
 
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -26,7 +15,7 @@ export function initLoginScene(): void {
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   } catch {
-    return;
+    return () => {};
   }
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -242,8 +231,10 @@ export function initLoginScene(): void {
     renderer.toneMappingExposure = d ? 0.95 : 1.05;
   }
   applyTheme();
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
-  new MutationObserver(applyTheme).observe(document.documentElement, {
+  const darkModeQuery = matchMedia("(prefers-color-scheme: dark)");
+  darkModeQuery.addEventListener("change", applyTheme);
+  const themeObserver = new MutationObserver(applyTheme);
+  themeObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ["data-theme"],
   });
@@ -273,10 +264,11 @@ export function initLoginScene(): void {
     my = 0,
     cx = 0,
     cy = 0;
-  window.addEventListener("pointermove", function (e) {
+  function handlePointerMove(e: PointerEvent) {
     mx = (e.clientX / window.innerWidth) * 2 - 1;
     my = (e.clientY / window.innerHeight) * 2 - 1;
-  });
+  }
+  window.addEventListener("pointermove", handlePointerMove);
 
   // ---------- Render loop ----------
   const t0 = performance.now();
@@ -285,7 +277,11 @@ export function initLoginScene(): void {
   }
   const base = new THREE.Vector3();
 
+  let frameId = 0;
+  let disposed = false;
+
   function frame(now: number) {
+    if (disposed) return;
     const t = (now - t0) / 1000;
     cx += (mx - cx) * 0.05;
     cy += (my - cy) * 0.05;
@@ -309,7 +305,17 @@ export function initLoginScene(): void {
       torusWrap.position.y = 1.25 + Math.sin(t * 0.8 + 1) * 0.06;
     }
     renderer.render(scene, camera);
-    requestAnimationFrame(frame);
+    frameId = requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+  frameId = requestAnimationFrame(frame);
+
+  return function cleanup() {
+    disposed = true;
+    cancelAnimationFrame(frameId);
+    window.removeEventListener("resize", resize);
+    window.removeEventListener("pointermove", handlePointerMove);
+    darkModeQuery.removeEventListener("change", applyTheme);
+    themeObserver.disconnect();
+    renderer.dispose();
+  };
 }

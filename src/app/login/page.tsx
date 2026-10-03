@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Script from "next/script";
 import { Inter } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { initLoginScene } from "./loginScene";
+import { ArchSceneCanvas } from "@/components/common/ArchSceneCanvas";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"], weight: ["400", "500", "600"] });
 
@@ -37,13 +36,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <Script
-        src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
-        strategy="afterInteractive"
-        onLoad={initLoginScene}
-      />
-
-      <canvas id="gl" aria-hidden="true" className="fixed inset-0 block h-full w-full" />
+      <ArchSceneCanvas />
 
       <main className={`login-main ${inter.className}`}>
         <form onSubmit={handleSubmit} className="login-card">
