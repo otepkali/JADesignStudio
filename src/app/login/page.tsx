@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Script from "next/script";
+import { Inter } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { initLoginScene } from "./loginScene";
+
+const inter = Inter({ subsets: ["latin", "cyrillic"], weight: ["400", "500", "600"] });
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,53 +36,230 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm ring-1 ring-neutral-200">
-        <Image
-          src="/logo.png"
-          alt="Janerke Abat Design"
-          width={486}
-          height={92}
-          priority
-          className="mb-6 h-10 w-auto"
-        />
-        <p className="mb-6 text-sm text-neutral-500">Войдите, чтобы продолжить</p>
+    <>
+      <Script
+        src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+        strategy="afterInteractive"
+        onLoad={initLoginScene}
+      />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Email</label>
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
-            />
+      <canvas id="gl" aria-hidden="true" className="fixed inset-0 block h-full w-full" />
+
+      <main className={`login-main ${inter.className}`}>
+        <form onSubmit={handleSubmit} className="login-card">
+          <div className="login-logo">
+            <span className="login-logo-jn">JANERKE ABAT</span>
+            <span className="login-logo-ds">DESIGN</span>
           </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Пароль</label>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-base transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
-            />
-          </div>
+          <h1>Войдите, чтобы продолжить</h1>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          <label htmlFor="em">Email</label>
+          <input
+            id="em"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-brand-700 px-4 py-2.5 text-base font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
-          >
+          <label htmlFor="pw">Пароль</label>
+          <input
+            id="pw"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          {error && <p className="login-error">{error}</p>}
+
+          <button type="submit" disabled={loading}>
             {loading ? "Вход..." : "Войти"}
           </button>
         </form>
-      </div>
-    </div>
+      </main>
+
+      <style jsx global>{`
+        :root {
+          --login-bg1: #f8f3ef;
+          --login-bg2: #e9dfd9;
+          --login-card: rgba(255, 255, 255, 0.72);
+          --login-ink: #1b1517;
+          --login-muted: #756a6e;
+          --login-line: #e3d9d5;
+          --login-wine: #5b1a2c;
+          --login-field: #ffffff;
+        }
+        @media (prefers-color-scheme: dark) {
+          :root:not([data-theme="light"]) {
+            --login-bg1: #2a1a21;
+            --login-bg2: #120c0f;
+            --login-card: rgba(32, 24, 28, 0.72);
+            --login-ink: #f4eeee;
+            --login-muted: #b0a4a8;
+            --login-line: #43363b;
+            --login-wine: #c0587a;
+            --login-field: #1a1215;
+          }
+        }
+        :root[data-theme="dark"] {
+          --login-bg1: #2a1a21;
+          --login-bg2: #120c0f;
+          --login-card: rgba(32, 24, 28, 0.72);
+          --login-ink: #f4eeee;
+          --login-muted: #b0a4a8;
+          --login-line: #43363b;
+          --login-wine: #c0587a;
+          --login-field: #1a1215;
+        }
+        body {
+          background: radial-gradient(ellipse 80% 70% at 36% 42%, var(--login-bg1), var(--login-bg2));
+          background-attachment: fixed;
+        }
+      `}</style>
+
+      <style jsx>{`
+        .login-main {
+          position: relative;
+          min-height: 100vh;
+          min-height: 100svh;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          padding: 24px clamp(20px, 8vw, 120px);
+        }
+        .login-card {
+          width: 100%;
+          max-width: 380px;
+          background: var(--login-card);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border: 1px solid var(--login-line);
+          border-radius: 24px;
+          padding: 32px 30px 30px;
+        }
+        .login-logo {
+          text-align: center;
+          margin-bottom: 26px;
+          color: var(--login-wine);
+        }
+        .login-logo-jn {
+          display: block;
+          font-family: "Playfair Display", Georgia, serif;
+          font-weight: 400;
+          font-size: 27px;
+          letter-spacing: 0.07em;
+          line-height: 1;
+        }
+        .login-logo-ds {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 9px;
+          font-size: 10px;
+          letter-spacing: 0.3em;
+          font-weight: 500;
+        }
+        .login-logo-ds:before,
+        .login-logo-ds:after {
+          content: "";
+          flex: 1;
+          height: 1px;
+          background: currentColor;
+          opacity: 0.6;
+        }
+        h1 {
+          font-family: "Playfair Display", Georgia, serif;
+          font-weight: 500;
+          font-size: 22px;
+          line-height: 1.25;
+          margin: 0 0 20px;
+          text-align: center;
+          color: var(--login-ink);
+        }
+        label {
+          display: block;
+          font-size: 13px;
+          color: var(--login-muted);
+          margin: 0 0 6px;
+        }
+        input {
+          width: 100%;
+          height: 46px;
+          border: 1px solid var(--login-line);
+          background: var(--login-field);
+          color: var(--login-ink);
+          border-radius: 12px;
+          padding: 0 14px;
+          font: inherit;
+          margin-bottom: 16px;
+        }
+        input:focus {
+          outline: 2px solid var(--login-wine);
+          outline-offset: 1px;
+          border-color: transparent;
+        }
+        .login-error {
+          margin: -8px 0 16px;
+          font-size: 13px;
+          color: #c0392b;
+        }
+        button {
+          width: 100%;
+          height: 48px;
+          border: 0;
+          border-radius: 12px;
+          background: var(--login-wine);
+          color: #fff;
+          font: 500 15px Inter, system-ui, sans-serif;
+          cursor: pointer;
+          margin-top: 4px;
+        }
+        :global(:root[data-theme="dark"]) button {
+          color: #1a0f13;
+        }
+        @media (prefers-color-scheme: dark) {
+          :global(:root:not([data-theme="light"])) button {
+            color: #1a0f13;
+          }
+        }
+        button:hover {
+          filter: brightness(1.08);
+        }
+        button:disabled {
+          opacity: 0.6;
+          cursor: default;
+        }
+        button:focus-visible {
+          outline: 2px solid var(--login-ink);
+          outline-offset: 2px;
+        }
+
+        @media (max-width: 820px) {
+          .login-main {
+            align-items: flex-end;
+            justify-content: center;
+            padding: 20px 16px 24px;
+          }
+          .login-card {
+            max-width: 420px;
+            padding: 24px 22px 22px;
+          }
+          .login-logo {
+            margin-bottom: 16px;
+          }
+          h1 {
+            font-size: 19px;
+            margin-bottom: 14px;
+          }
+          input {
+            height: 44px;
+            margin-bottom: 12px;
+          }
+        }
+      `}</style>
+    </>
   );
 }
