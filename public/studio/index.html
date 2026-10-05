@@ -663,7 +663,12 @@ $$('#nav a').forEach(function(a){a.addEventListener('click',function(){setMenu(f
 
 /* вход для команды */
 var lgOpen=$('#lgOpen'),lgPanel=$('#lgPanel'),lgErr=$('#lgErr'),lgSend=$('#lgSend');
+var lgIn=false;
+fetch('/api/session',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+  if(j&&j.loggedIn){lgIn=true;lgOpen.textContent='В дашборд';lgPanel.hidden=true;}
+}).catch(function(){});
 lgOpen.addEventListener('click',function(){
+  if(lgIn){location.href='/dashboard';return;}
   var show=lgPanel.hidden;lgPanel.hidden=!show;lgOpen.setAttribute('aria-expanded',show?'true':'false');
   if(show)$('#lg-email').focus();
 });
