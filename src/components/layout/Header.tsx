@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: "/business", label: "Бизнес" },
   { href: "/tasks", label: "Задачи" },
   { href: "/shop", label: "Магазин" },
+  { href: "/structure", label: "Оргструктура" },
 ];
 
 export function Header() {
