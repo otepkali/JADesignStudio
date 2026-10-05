@@ -1,4 +1,6 @@
 import { OrgChart } from "@/components/team/OrgChart";
+import { RoleCard } from "@/components/team/RoleCard";
+import { ROLES } from "@/lib/roles";
 
 const CEO_DUTIES = [
   "развитие бренда JANERKE ABAT",
@@ -51,6 +53,15 @@ export default function StructurePage() {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-base font-semibold text-neutral-900">Роли команды</h2>
+        <div className="space-y-3">
+          {ROLES.map((role) => (
+            <RoleCard key={role.name} role={role} />
+          ))}
+        </div>
       </div>
     </div>
   );
