@@ -51,7 +51,7 @@ export async function updateProject(
   }
 
   revalidatePath(`/projects/${projectId}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   return { project: data };
 }
 
@@ -65,7 +65,7 @@ export async function deleteProject(
     return { error: error.message };
   }
 
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -97,7 +97,7 @@ export async function addPayment(
   }
 
   revalidatePath(`/projects/${projectId}`);
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   return { payment: data };
 }
 
@@ -201,7 +201,7 @@ export async function addExpense(
   const synced = await syncExpenseToSheets(supabase, inserted.id);
 
   revalidatePath(projectPath(projectId));
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath("/analytics");
 
   return {
@@ -252,7 +252,7 @@ export async function updateExpense(
   const synced = await syncExpenseToSheets(supabase, expenseId);
 
   revalidatePath(projectPath(projectId));
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath("/analytics");
 
   return {
@@ -273,7 +273,7 @@ export async function deleteExpense(
   }
 
   revalidatePath(projectPath(projectId));
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   revalidatePath("/analytics");
   return { success: true };
 }

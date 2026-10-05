@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 const NAV_LINKS = [
-  { href: "/", label: "Дашборд" },
+  { href: "/dashboard", label: "Дашборд" },
   { href: "/analytics", label: "Аналитика" },
   { href: "/business", label: "Бизнес" },
   { href: "/tasks", label: "Задачи" },
@@ -19,7 +19,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-10 border-b border-brand-100 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <Link href="/" className="shrink-0" onClick={() => setMenuOpen(false)}>
+        <Link href="/dashboard" className="shrink-0" onClick={() => setMenuOpen(false)}>
           <Image
             src="/logo.png"
             alt="Janerke Abat Design"
