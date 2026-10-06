@@ -38,7 +38,7 @@ const leafY = 406;
 const leafH = 40;
 const pdX = 343;
 const pdY = 198;
-const pdW = 200;
+const pdW = 220;
 const pdH = 52;
 const faX = 660;
 const faW = 130;
@@ -90,8 +90,11 @@ export function OrgChart() {
 
       <g>
         <Box cx={pdX} cy={pdY} w={pdW} h={pdH} />
-        <text x={pdX} y={pdY + 5} textAnchor="middle" fontSize={13} fontWeight={600} fill={ink}>
-          PROJECT DIRECTOR
+        <text x={pdX} y={pdY - 3} textAnchor="middle" fontSize={12} fontWeight={600} fill={ink}>
+          ЛИЧНЫЙ АССИСТЕНТ /
+        </text>
+        <text x={pdX} y={pdY + 13} textAnchor="middle" fontSize={12} fontWeight={600} fill={ink}>
+          КООРДИНАТОР ПРОЕКТОВ
         </text>
       </g>
 
