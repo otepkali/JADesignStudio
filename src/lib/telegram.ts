@@ -74,7 +74,7 @@ export async function answerCallbackQuery(callbackQueryId: string, text: string)
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
-  });
+  }).catch((err) => console.error("answerCallbackQuery failed", err));
 }
 
 export async function markMessageDone(chatId: string, messageId: number, originalText: string): Promise<void> {
@@ -86,14 +86,21 @@ export async function markMessageDone(chatId: string, messageId: number, origina
       message_id: messageId,
       text: `${originalText}\n\n✅ Выполнено`,
     }),
-  });
+  }).catch((err) => console.error("editMessageText failed", err));
 }
 
 export async function setWebhook(url: string): Promise<unknown> {
   const res = await fetch(apiUrl("setWebhook"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
+    // Explicitly subscribe to callback_query, otherwise the "Сделано" button
+    // presses may never reach the webhook.
+    body: JSON.stringify({ url, allowed_updates: ["message", "callback_query"] }),
   });
+  return res.json();
+}
+
+export async function getWebhookInfo(): Promise<unknown> {
+  const res = await fetch(apiUrl("getWebhookInfo"));
   return res.json();
 }

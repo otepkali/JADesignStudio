@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     if (data.startsWith("done:") && cb.message) {
       const taskId = data.slice("done:".length);
       const { error } = await supabase.from("tasks").update({ status: "done" }).eq("id", taskId);
+      if (error) console.error("Telegram done failed", taskId, error.message);
 
       await answerCallbackQuery(cb.id, error ? "Не удалось отметить" : "Отмечено как сделано!");
 
