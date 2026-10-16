@@ -3,11 +3,12 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDate, formatTenge } from "@/lib/format";
-import { ACCOUNT_LABELS } from "@/lib/accounts";
+import { ACCOUNTS, ACCOUNT_LABELS } from "@/lib/accounts";
 import { groupExpensesByCategory } from "@/lib/analytics";
 import { ExpenseForm } from "@/components/project/ExpenseForm";
 import { ExpensesTable } from "@/components/project/ExpensesTable";
 import { CategoryPieChart } from "@/components/project/CategoryPieChart";
+import { addBonusIncome, deleteBonusIncome } from "@/app/(app)/business/actions";
 import {
   addExpense,
   deleteExpense,
@@ -16,18 +17,20 @@ import {
 } from "@/app/(app)/projects/[id]/actions";
 import type { BonusIncome, BusinessBalance } from "@/lib/data";
 import type { ExpenseCategory, ExpenseWithCategory } from "@/types/database";
-import type { ExpenseFormValues } from "@/lib/schemas";
+import type { BonusIncomeFormValues, ExpenseFormValues } from "@/lib/schemas";
 
 export function BusinessWorkspace({
   initialBalance,
   initialCategories,
   initialExpenses,
   projectBonuses,
+  initialManualBonuses,
 }: {
   initialBalance: BusinessBalance;
   initialCategories: ExpenseCategory[];
   initialExpenses: ExpenseWithCategory[];
   projectBonuses: BonusIncome[];
+  initialManualBonuses: BonusIncome[];
 }) {
   const router = useRouter();
   const [balance, setBalance] = useState(initialBalance);
@@ -38,23 +41,34 @@ export function BusinessWorkspace({
   const categoryData = useMemo(() => groupExpensesByCategory(expenses), [expenses]);
   const isNegative = balance.totalBalance < 0;
 
+  const [manualBonuses, setManualBonuses] = useState(initialManualBonuses);
+  const [bonusForm, setBonusForm] = useState({
+    title: "",
+    amount: "",
+    account: ACCOUNTS[0].id as string,
+    date: new Date().toISOString().slice(0, 10),
+  });
+  const [bonusError, setBonusError] = useState<string | null>(null);
+  const [bonusSaving, setBonusSaving] = useState(false);
+
   const bonusRows = useMemo<BonusIncome[]>(() => {
-    const adminRows = expenses
+    const adminRows: BonusIncome[] = expenses
       .filter((e) => (e.bonus_amount ?? 0) > 0)
       .map((e) => ({
         id: e.id,
-        material_name: e.material_name,
-        bonus_amount: Number(e.bonus_amount),
-        bonus_percent: e.bonus_percent,
+        source: "expense",
+        title: e.material_name,
+        amount: Number(e.bonus_amount),
+        percent: e.bonus_percent,
         account: e.account,
-        expense_date: e.expense_date,
+        date: e.expense_date,
         projectName: null,
       }));
-    return [...projectBonuses, ...adminRows].sort((a, b) =>
-      b.expense_date.localeCompare(a.expense_date)
+    return [...projectBonuses, ...adminRows, ...manualBonuses].sort((a, b) =>
+      b.date.localeCompare(a.date)
     );
-  }, [expenses, projectBonuses]);
-  const bonusTotal = bonusRows.reduce((sum, r) => sum + r.bonus_amount, 0);
+  }, [expenses, projectBonuses, manualBonuses]);
+  const bonusTotal = bonusRows.reduce((sum, r) => sum + r.amount, 0);
 
   function showSyncNotice(message: string) {
     setSyncNotice(message);
@@ -133,6 +147,39 @@ export function BusinessWorkspace({
     }
   }
 
+  async function handleAddBonus(e: React.FormEvent) {
+    e.preventDefault();
+    setBonusError(null);
+    setBonusSaving(true);
+    const result = await addBonusIncome({
+      title: bonusForm.title.trim(),
+      amount: Number(bonusForm.amount),
+      account: bonusForm.account as BonusIncomeFormValues["account"],
+      income_date: bonusForm.date,
+      note: "",
+    });
+    setBonusSaving(false);
+    if ("error" in result) {
+      setBonusError(result.error);
+      return;
+    }
+    setManualBonuses((prev) => [result.bonus, ...prev]);
+    adjustBalance(0, result.bonus.amount);
+    setBonusForm((f) => ({ ...f, title: "", amount: "" }));
+    router.refresh();
+  }
+
+  async function handleDeleteBonus(row: BonusIncome) {
+    const result = await deleteBonusIncome(row.id);
+    if ("error" in result) {
+      showSyncNotice("Не удалось удалить бонус");
+      return;
+    }
+    setManualBonuses((prev) => prev.filter((b) => b.id !== row.id));
+    adjustBalance(0, -row.amount);
+    router.refresh();
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -190,29 +237,87 @@ export function BusinessWorkspace({
             Всего: <span className="font-semibold text-emerald-700">{formatTenge(bonusTotal)}</span>
           </p>
         </div>
+        <form onSubmit={handleAddBonus} className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-6">
+          <input
+            required
+            value={bonusForm.title}
+            onChange={(e) => setBonusForm((f) => ({ ...f, title: e.target.value }))}
+            placeholder="За что бонус (поставщик, объём…)"
+            className="rounded-lg border border-neutral-200 px-3 py-2 text-sm sm:col-span-2"
+          />
+          <input
+            required
+            type="number"
+            min="1"
+            step="any"
+            inputMode="decimal"
+            value={bonusForm.amount}
+            onChange={(e) => setBonusForm((f) => ({ ...f, amount: e.target.value }))}
+            placeholder="Сумма, ₸"
+            className="rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+          />
+          <select
+            value={bonusForm.account}
+            onChange={(e) => setBonusForm((f) => ({ ...f, account: e.target.value }))}
+            className="rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+          >
+            {ACCOUNTS.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+          <input
+            required
+            type="date"
+            value={bonusForm.date}
+            onChange={(e) => setBonusForm((f) => ({ ...f, date: e.target.value }))}
+            className="rounded-lg border border-neutral-200 px-3 py-2 text-sm"
+          />
+          <button
+            type="submit"
+            disabled={bonusSaving}
+            className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white hover:bg-brand-800 disabled:opacity-60"
+          >
+            {bonusSaving ? "..." : "Добавить"}
+          </button>
+          {bonusError && <p className="text-sm text-red-600 sm:col-span-6">{bonusError}</p>}
+        </form>
         {bonusRows.length === 0 ? (
           <p className="text-sm text-neutral-400">
-            Пока нет бонусов. Они появляются, когда у расхода включён «Бонус от поставщика».
+            Пока нет бонусов. Добавьте выше или включите «Бонус от поставщика» в расходе.
           </p>
         ) : (
           <ul className="divide-y divide-neutral-100">
             {bonusRows.map((row) => (
               <li key={row.id} className="flex items-start justify-between gap-3 py-2.5 text-sm">
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-neutral-900">{row.material_name}</p>
+                  <p className="truncate font-medium text-neutral-900">{row.title}</p>
                   <p className="text-xs text-neutral-400">
-                    {formatDate(row.expense_date)} · {row.projectName ?? "Админ. расходы"}
+                    {formatDate(row.date)} · {row.projectName ?? (row.source === "manual" ? "Бонус" : "Админ. расходы")}
                     {row.account ? ` · ${ACCOUNT_LABELS[row.account]}` : ""}
                   </p>
                 </div>
-                <p className="shrink-0 font-semibold text-emerald-700">
-                  +{formatTenge(row.bonus_amount)}
-                  {row.bonus_percent ? (
-                    <span className="ml-1 text-xs font-normal text-neutral-400">
-                      ({row.bonus_percent}%)
-                    </span>
-                  ) : null}
-                </p>
+                <div className="flex shrink-0 items-center gap-2">
+                  <p className="font-semibold text-emerald-700">
+                    +{formatTenge(row.amount)}
+                    {row.percent ? (
+                      <span className="ml-1 text-xs font-normal text-neutral-400">
+                        ({row.percent}%)
+                      </span>
+                    ) : null}
+                  </p>
+                  {row.source === "manual" && (
+                    <button
+                      type="button"
+                      aria-label="Удалить бонус"
+                      onClick={() => handleDeleteBonus(row)}
+                      className="rounded-md px-1.5 text-neutral-300 hover:bg-red-50 hover:text-red-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

@@ -1,13 +1,14 @@
-import { getAdminExpenseDetail, getBusinessBalance, getProjectBonusIncome } from "@/lib/data";
+import { getAdminExpenseDetail, getBusinessBalance, getManualBonusIncome, getProjectBonusIncome } from "@/lib/data";
 import { BusinessWorkspace } from "@/components/business/BusinessWorkspace";
 
 export const dynamic = "force-dynamic";
 
 export default async function BusinessPage() {
-  const [balance, adminExpenses, projectBonuses] = await Promise.all([
+  const [balance, adminExpenses, projectBonuses, manualBonuses] = await Promise.all([
     getBusinessBalance(),
     getAdminExpenseDetail(),
     getProjectBonusIncome(),
+    getManualBonusIncome(),
   ]);
 
   return (
@@ -16,6 +17,7 @@ export default async function BusinessPage() {
       initialCategories={adminExpenses.categories}
       initialExpenses={adminExpenses.expenses}
       projectBonuses={projectBonuses}
+      initialManualBonuses={manualBonuses}
     />
   );
 }

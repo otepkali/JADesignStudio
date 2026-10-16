@@ -67,6 +67,17 @@ export const expenseSchema = z
     }
   );
 
+export const bonusIncomeSchema = z.object({
+  title: z.string().min(1, "Укажите, за что бонус"),
+  amount: z.coerce.number().positive("Сумма должна быть больше нуля"),
+  account: accountSchema,
+  income_date: z.string().min(1),
+  note: z.string().optional().or(z.literal("")),
+});
+
+export type BonusIncomeFormValues = z.output<typeof bonusIncomeSchema>;
+export type BonusIncomeFormInput = z.input<typeof bonusIncomeSchema>;
+
 export type ExpenseFormValues = z.output<typeof expenseSchema>;
 export type ExpenseFormInput = z.input<typeof expenseSchema>;
 

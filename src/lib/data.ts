@@ -247,9 +247,10 @@ export interface BusinessBalance {
 export async function getBusinessBalance(): Promise<BusinessBalance> {
   const supabase = await createClient();
 
-  const [{ data: payments }, { data: expenses }] = await Promise.all([
+  const [{ data: payments }, { data: expenses }, { data: manualBonuses }] = await Promise.all([
     supabase.from("payments").select("amount, account"),
     supabase.from("expenses").select("total_price, account, bonus_amount"),
+    supabase.from("bonus_incomes").select("amount, account"),
   ]);
 
   const buckets = new Map<AccountId, { received: number; spent: number; bonuses: number }>();
@@ -264,6 +265,10 @@ export async function getBusinessBalance(): Promise<BusinessBalance> {
     const bucket = e.account && buckets.has(e.account) ? buckets.get(e.account)! : unassigned;
     bucket.spent += Number(e.total_price);
     if (e.bonus_amount) bucket.bonuses += Number(e.bonus_amount);
+  }
+  for (const b of manualBonuses ?? []) {
+    const bucket = b.account && buckets.has(b.account as AccountId) ? buckets.get(b.account as AccountId)! : unassigned;
+    bucket.bonuses += Number(b.amount);
   }
 
   const byAccount: AccountBalance[] = ACCOUNTS.map((acc) => {
@@ -296,11 +301,12 @@ export async function getBusinessBalance(): Promise<BusinessBalance> {
 
 export interface BonusIncome {
   id: string;
-  material_name: string;
-  bonus_amount: number;
-  bonus_percent: number | null;
+  source: "expense" | "manual";
+  title: string;
+  amount: number;
+  percent: number | null;
   account: AccountId | null;
-  expense_date: string;
+  date: string;
   projectName: string | null;
 }
 
@@ -315,12 +321,46 @@ export async function getProjectBonusIncome(): Promise<BonusIncome[]> {
     .gt("bonus_amount", 0)
     .order("expense_date", { ascending: false });
 
-  return ((data ?? []) as unknown as (Omit<BonusIncome, "projectName"> & {
+  type Row = {
+    id: string;
+    material_name: string;
+    bonus_amount: number;
+    bonus_percent: number | null;
+    account: AccountId | null;
+    expense_date: string;
     projects: { name: string } | null;
-  })[]).map(({ projects, ...rest }) => ({
-    ...rest,
-    bonus_amount: Number(rest.bonus_amount),
-    projectName: projects?.name ?? null,
+  };
+
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    id: r.id,
+    source: "expense" as const,
+    title: r.material_name,
+    amount: Number(r.bonus_amount),
+    percent: r.bonus_percent,
+    account: r.account,
+    date: r.expense_date,
+    projectName: r.projects?.name ?? null,
+  }));
+}
+
+// Standalone bonuses entered directly on the Business page. Returns [] if the
+// bonus_incomes table has not been created yet (migration 10 not run).
+export async function getManualBonusIncome(): Promise<BonusIncome[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("bonus_incomes")
+    .select("id, title, amount, account, income_date")
+    .order("income_date", { ascending: false });
+
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    source: "manual" as const,
+    title: r.title,
+    amount: Number(r.amount),
+    percent: null,
+    account: r.account as AccountId | null,
+    date: r.income_date,
+    projectName: null,
   }));
 }
 
