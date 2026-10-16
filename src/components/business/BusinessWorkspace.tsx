@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatTenge } from "@/lib/format";
+import { formatDate, formatTenge } from "@/lib/format";
+import { ACCOUNT_LABELS } from "@/lib/accounts";
 import { groupExpensesByCategory } from "@/lib/analytics";
 import { ExpenseForm } from "@/components/project/ExpenseForm";
 import { ExpensesTable } from "@/components/project/ExpensesTable";
@@ -13,7 +14,7 @@ import {
   resyncExpense,
   updateExpense,
 } from "@/app/(app)/projects/[id]/actions";
-import type { BusinessBalance } from "@/lib/data";
+import type { BonusIncome, BusinessBalance } from "@/lib/data";
 import type { ExpenseCategory, ExpenseWithCategory } from "@/types/database";
 import type { ExpenseFormValues } from "@/lib/schemas";
 
@@ -21,10 +22,12 @@ export function BusinessWorkspace({
   initialBalance,
   initialCategories,
   initialExpenses,
+  projectBonuses,
 }: {
   initialBalance: BusinessBalance;
   initialCategories: ExpenseCategory[];
   initialExpenses: ExpenseWithCategory[];
+  projectBonuses: BonusIncome[];
 }) {
   const router = useRouter();
   const [balance, setBalance] = useState(initialBalance);
@@ -34,6 +37,24 @@ export function BusinessWorkspace({
 
   const categoryData = useMemo(() => groupExpensesByCategory(expenses), [expenses]);
   const isNegative = balance.totalBalance < 0;
+
+  const bonusRows = useMemo<BonusIncome[]>(() => {
+    const adminRows = expenses
+      .filter((e) => (e.bonus_amount ?? 0) > 0)
+      .map((e) => ({
+        id: e.id,
+        material_name: e.material_name,
+        bonus_amount: Number(e.bonus_amount),
+        bonus_percent: e.bonus_percent,
+        account: e.account,
+        expense_date: e.expense_date,
+        projectName: null,
+      }));
+    return [...projectBonuses, ...adminRows].sort((a, b) =>
+      b.expense_date.localeCompare(a.expense_date)
+    );
+  }, [expenses, projectBonuses]);
+  const bonusTotal = bonusRows.reduce((sum, r) => sum + r.bonus_amount, 0);
 
   function showSyncNotice(message: string) {
     setSyncNotice(message);
@@ -161,6 +182,42 @@ export function BusinessWorkspace({
           добавления счетов — в сальдо выше не учитываются.
         </div>
       )}
+
+      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-base font-semibold text-neutral-900">Доходы от бонусов</h2>
+          <p className="text-sm text-neutral-500">
+            Всего: <span className="font-semibold text-emerald-700">{formatTenge(bonusTotal)}</span>
+          </p>
+        </div>
+        {bonusRows.length === 0 ? (
+          <p className="text-sm text-neutral-400">
+            Пока нет бонусов. Они появляются, когда у расхода включён «Бонус от поставщика».
+          </p>
+        ) : (
+          <ul className="divide-y divide-neutral-100">
+            {bonusRows.map((row) => (
+              <li key={row.id} className="flex items-start justify-between gap-3 py-2.5 text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-neutral-900">{row.material_name}</p>
+                  <p className="text-xs text-neutral-400">
+                    {formatDate(row.expense_date)} · {row.projectName ?? "Админ. расходы"}
+                    {row.account ? ` · ${ACCOUNT_LABELS[row.account]}` : ""}
+                  </p>
+                </div>
+                <p className="shrink-0 font-semibold text-emerald-700">
+                  +{formatTenge(row.bonus_amount)}
+                  {row.bonus_percent ? (
+                    <span className="ml-1 text-xs font-normal text-neutral-400">
+                      ({row.bonus_percent}%)
+                    </span>
+                  ) : null}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
         <h2 className="mb-1 text-base font-semibold text-neutral-900">

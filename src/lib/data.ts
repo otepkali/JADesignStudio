@@ -294,6 +294,36 @@ export async function getBusinessBalance(): Promise<BusinessBalance> {
   };
 }
 
+export interface BonusIncome {
+  id: string;
+  material_name: string;
+  bonus_amount: number;
+  bonus_percent: number | null;
+  account: AccountId | null;
+  expense_date: string;
+  projectName: string | null;
+}
+
+// Supplier bonuses on project expenses. Admin-expense bonuses are derived
+// client-side from the editable admin list so they stay in sync after edits.
+export async function getProjectBonusIncome(): Promise<BonusIncome[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("expenses")
+    .select("id, material_name, bonus_amount, bonus_percent, account, expense_date, projects(name)")
+    .not("project_id", "is", null)
+    .gt("bonus_amount", 0)
+    .order("expense_date", { ascending: false });
+
+  return ((data ?? []) as unknown as (Omit<BonusIncome, "projectName"> & {
+    projects: { name: string } | null;
+  })[]).map(({ projects, ...rest }) => ({
+    ...rest,
+    bonus_amount: Number(rest.bonus_amount),
+    projectName: projects?.name ?? null,
+  }));
+}
+
 export async function getTasks(): Promise<Task[]> {
   const supabase = await createClient();
   const { data } = await supabase.from("tasks").select("*");
